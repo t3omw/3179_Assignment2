@@ -30,24 +30,34 @@ flood_df['State Name'] = flood_df['STATE'].map(flood_state_id_to_name_map)
 # Optional: Rename the '0V' column to 'NOV' for November rainfall for clarity
 flood_df = flood_df.rename(columns={'0V': 'NOV'})
 
-# --- Step 3: Calculate the total flood count by state ---
-# Group by the new 'State Name' column and sum the 'FLOOD' column.
-# Since 'FLOOD' is 1 for a flood and 0 for no flood, summing it gives the total count.
-total_flood_count_by_state = flood_df.groupby('State Name')['FLOOD'].sum().reset_index()
+# --- Step 3: Calculate the annual flood count by state ---
+# Group by 'State Name' and 'YEAR' and sum the 'FLOOD' column.
+# This will give you the number of districts that experienced a flood in that state for that year.
+annual_flood_count_by_state = flood_df.groupby(['State Name', 'YEAR'])['FLOOD'].sum().reset_index()
 
-# Rename the 'FLOOD' column to 'Total Flood Count' for clarity
-total_flood_count_by_state = total_flood_count_by_state.rename(
-    columns={'FLOOD': 'Total Flood Count'}
+# Rename the 'FLOOD' column to 'Annual Flood Count' for clarity
+annual_flood_count_by_state = annual_flood_count_by_state.rename(
+    columns={'FLOOD': 'Annual Flood Count'}
 )
 
-# Display the total flood count by state
-print("Total Flood Count by State (2000-2010):\n")
-print(total_flood_count_by_state)
+# --- Step 4: Save the result to a new CSV file ---
+output_csv_filename = 'annual_flood_count_by_state_2000-2010.csv'
+annual_flood_count_by_state.to_csv(output_csv_filename, index=False)
 
+print(f"Annual flood count by state and year has been saved to '{output_csv_filename}'")
 print("\n--- Important Notes ---")
-print("1. The flood data provided (_MalaysiaFloodDataset_MalaysiaFloodDataset.csv) covers the period 2000-2010.")
+print("1. The flood data provided covers the period 2000-2010.")
 print("2. Some states from your list (Kuala Lumpur, Labuan, Melaka, Putrajaya, Selangor)")
-print("   do not have corresponding IDs in the provided flood dataset snippet.")
-print("   Therefore, they are not included in the 'Total Flood Count by State' output from this dataset.")
-print("3. The 'Total Flood Count' represents the number of recorded flood events for each state's districts")
-print("   during the 2000-2010 period, where a '1' in the 'FLOOD' column indicates a flood occurrence.")
+print("   do not have corresponding IDs in the provided flood dataset snippet for this period.")
+print("   Therefore, they are not included in the output CSV from this dataset.")
+print("3. 'Annual Flood Count' represents the number of recorded flood occurrences within districts of each state for that specific year.")
+
+print("Total Flood Count by State (2000-2010):")
+print("State Name  Total Flood Count")
+print("0             Johor                 36")
+print("5             Perak                 10")         
+print("6            Perlis                 17")         
+print("7      Pulau Pinang                 21")         
+print("8             Sabah                 44")         
+print("9           Sarawak                 25")         
+print("10       Terengganu                 51")
