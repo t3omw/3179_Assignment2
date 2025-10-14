@@ -6,41 +6,40 @@
   <script src="https://cdn.jsdelivr.net/npm/vega@5"></script>
   <script src="https://cdn.jsdelivr.net/npm/vega-lite@5"></script>
   <script src="https://cdn.jsdelivr.net/npm/vega-embed@6"></script>
+  <script src="https://cdn.jsdelivr.net/npm/d3@7"></script> <!-- D3.js for d3.max -->
   <link rel="icon" href="data:,">
   <style>
     body {
-      margin: 0; /* Remove default body margin */
+      margin: 0;
       background: #fafafa;
-      font-family: Arial, sans-serif; /* Consistent font */
+      font-family: Arial, sans-serif;
     }
 
     h1 {
       text-align: center;
-      margin-top: 20px; /* Add some margin to the top of the title */
+      margin-top: 20px;
       margin-bottom: 20px;
       font-size: 55px;
     }
 
-    /* Main wrapper to align all content (controls + map, then line chart) to the left */
     .main-content-wrapper {
       display: flex;
-      flex-direction: column; /* Stack items vertically */
-      align-items: flex-start; /* Aligns items to the left within the wrapper */
+      flex-direction: column;
+      align-items: flex-start;
       width: 100%;
-      max-width: 1700px; /* Kept existing max width */
-      margin: 20px auto; /* Center the main content wrapper horizontally */
+      max-width: 1700px;
+      margin: 20px auto;
     }
 
-    /* Container for controls and map, displayed side-by-side */
     .controls-and-map-row {
       display: flex;
-      gap: 25px; /* Kept existing gap */
-      align-items: flex-start; /* Aligns controls and map to the top */
-      flex-wrap: wrap; /* Allows items to wrap on smaller screens */
-      justify-content: flex-start; /* Aligns content to the start (left) */
-      width: 100%; /* Take full width of its parent (.main-content-wrapper) */
-      margin-bottom: 50px; /* Increased space below this row for gap */
-      margin-left: 100px; /* Kept existing margin */
+      gap: 25px;
+      align-items: flex-start;
+      flex-wrap: wrap;
+      justify-content: flex-start;
+      width: 100%;
+      margin-bottom: 50px;
+      margin-left: 100px;
     }
 
     .controls {
@@ -53,23 +52,20 @@
       font-size: 18px;
     }
 
-    /* Styles for the map container (still has a white background implicitly from Vega-Lite) */
     #map {
-      width: 1050px; /* Kept existing width */
-      height: 650px; /* Kept existing height */
-      box-shadow: none; /* Remove shadow */
-      padding: 0; /* Remove padding as Vega-Lite handles its own background/border */
+      width: 1050px;
+      height: 650px;
+      padding: 0;
       margin: 0;
-      background: #fff; /* Explicitly add white background for consistency with other charts */
-      border-radius: 8px; /* Maintain rounded corners */
-      box-shadow: 0 2px 5px rgba(0,0,0,0.1); /* Maintain shadow */
+      background: #fff;
+      border-radius: 8px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
     }
 
-    /* Specific styles for the line chart container */
     #line {
-      width: 1650px; /* Kept existing width */
-      height: 550px; /* Kept existing height */
-      margin-top: 50px; /* Increased space from map above for gap */
+      width: 1650px;
+      height: 550px;
+      margin-top: 50px;
       padding-left: 180px;
     }
 
@@ -86,7 +82,7 @@
       border-radius: 4px;
     }
     hr {
-      margin: 20px 0; /* Adjusted margin for the horizontal rule */
+      margin: 20px 0;
     }
   </style>
 </head>
@@ -104,12 +100,25 @@
         <hr>
         <label><strong>State</strong></label><br>
         <select id="state-select">
-          <option>All States</option>
-          <option>Johor</option><option>Kedah</option><option>Kelantan</option>
-          <option>Negeri Sembilan</option><option>Pahang</option><option>Perak</option>
-          <option>Perlis</option><option>Pulau Pinang</option><option>Sabah</option>
-          <option>Sarawak</option><option>Terengganu</option>
-          <!-- Note: Kuala Lumpur, Labuan, Melaka, Putrajaya, Selangor are not in flood data for 2000-2010 -->
+          <option value="All States">All States</option>
+          <option value="Johor">Johor</option>
+          <option value="Kedah">Kedah</option>
+          <option value="Kelantan">Kelantan</option>
+          <option value="Negeri Sembilan">Negeri Sembilan</option>
+          <option value="Pahang">Pahang</option>
+          <option value="Perak">Perak</option>
+          <option value="Perlis">Perlis</option>
+          <option value="Pulau Pinang">Pulau Pinang</option>
+          <option value="Sabah">Sabah</option>
+          <option value="Sarawak">Sarawak</option>
+          <option value="Terengganu">Terengganu</option>
+          <option value="Melaka">Melaka</option>
+          <option value="Putrajaya">Putrajaya</option>
+          <option value="Selangor">Selangor</option>
+          <option value="Kuala Lumpur">Kuala Lumpur</option>
+          <option value="Labuan">Labuan</option>
+
+          <!-- Note: Kuala Lumpur, Labuan, Melaka, Putrajaya, Selangor are not in flood data for 2000-2010 in the provided dataset -->
         </select>
       </div>
 
@@ -126,7 +135,10 @@ function parseCSV(text) {
   return lines.map(l => {
     const vals = l.split(',');
     const obj = {};
-    cols.forEach((c, i) => obj[c] = vals[i]);
+    cols.forEach((c, i) => {
+        // Attempt to convert to number, otherwise keep as string
+        obj[c.trim()] = isNaN(Number(vals[i])) || vals[i].trim() === '' ? vals[i].trim() : Number(vals[i]);
+    });
     return obj;
   });
 }
@@ -136,113 +148,70 @@ let floodSummary = [];  // For the line chart (rainfall & flood count) and dot m
 
 async function loadData() {
   const [csv1, csv2] = await Promise.all([
-    fetch('malaysia_rainfall_per_sqkm.csv').then(r => r.text()), // Original rainfall density data
-    fetch('processed_flood_summary_by_state_year.csv').then(r => r.text()) // Preprocessed flood data
+    fetch('malaysia_rainfall_per_sqkm.csv').then(r => r.text()),
+    fetch('processed_flood_summary_by_state_year.csv').then(r => r.text())
   ]);
 
+  // Ensure parsing converts numeric strings to numbers where appropriate
   perSqkm = parseCSV(csv1).map(r => ({
     State: r.State,
-    Year: +r.Year,
-    RainfallPerKm2: +r["Yearly Rainfall (mm/km^2)"]
+    Year: r.Year,
+    RainfallPerKm2: r["Yearly Rainfall (mm/km^2)"]
   }));
 
   floodSummary = parseCSV(csv2).map(r => ({
-    State: r['State Name'],
-    Year: +r.YEAR,
-    AnnualFloodCount: +r.Annual_Flood_Count,
-    AverageAnnualRainfall: +r.Average_Annual_Rainfall
+    State: r['State Name'], // Use 'State Name' as parsed from your preprocessed CSV
+    Year: r.YEAR,
+    AnnualFloodCount: r.Annual_Flood_Count,
+    AverageAnnualRainfall: r.Average_Annual_Rainfall
   }));
 }
 
 function getMapValues(year) {
   // Data for choropleth coloring (RainfallPerKm2)
-  const choroplethData = perSqkm.filter(r => r.Year === year)
-                               .map(r => ({ State: r.State, rainfall: r.RainfallPerKm2 }));
-
+  const choroplethData = perSqkm.filter(r => r.Year === year && r.State !== 'Malaysia');
+  
   // Data for flood dots overlay
-  const floodDotData = floodSummary.filter(r => r.Year === year && r.AnnualFloodCount > 0) // Only include states with floods
-                                   .map(r => ({ State: r.State, AnnualFloodCount: r.AnnualFloodCount }));
+  const floodDotData = floodSummary.filter(r => r.Year === year && r.AnnualFloodCount > 0);
+  
   return { choroplethData, floodDotData };
 }
 
 function getLineValues(year, selectedState) {
-  // Filter the floodSummary data for the selected year range and state
-  const filteredData = floodSummary.filter(r => r.Year <= year);
+    const filteredData = floodSummary.filter(r => r.Year <= year);
 
-  if (selectedState !== 'All States') {
-    return filteredData.filter(r => r.State === selectedState);
-  }
-  // For 'All States', we need to sum flood counts and average rainfall across all states for each year
-  // This aggregation needs to happen if 'All States' is selected
-  const aggregatedNationalData = filteredData.groupby(['Year']).agg({
-      'AnnualFloodCount': 'sum',
-      'AverageAnnualRainfall': 'mean'
-  }).reset_index();
-  // Assign a single 'State' name for the national aggregation
-  aggregatedNationalData.forEach(d => d.State = 'All States (Aggregated)');
-  return aggregatedNationalData;
+    if (selectedState !== 'All States') {
+        return filteredData.filter(r => r.State === selectedState);
+    } else {
+        // For 'All States', return all individual state data
+        return filteredData;
+    }
 }
-
-
-// Polyfill for Array.prototype.groupby if not available (for getLineValues 'All States' aggregation)
-// This is a simplified, non-standard implementation for demonstration.
-// For production, consider a proper data processing pipeline or a library like lodash.groupby.
-if (!Array.prototype.groupBy) {
-  Array.prototype.groupBy = function(key) {
-    return this.reduce(function(acc, item) {
-      const group = item[key];
-      acc[group] = acc[group] || [];
-      acc[group].push(item);
-      return acc;
-    }, {});
-  };
-}
-
-// Function to simulate pandas-like groupby and agg
-Array.prototype.groupby = function(keys) {
-    const grouped = {};
-    this.forEach(item => {
-        const groupKey = keys.map(k => item[k]).join('|'); // Create a composite key
-        if (!grouped[groupKey]) {
-            grouped[groupKey] = [];
-        }
-        grouped[groupKey].push(item);
-    });
-    return {
-        agg: function(aggDefinitions) {
-            const result = [];
-            for (const key in grouped) {
-                const groupItems = grouped[key];
-                const newRow = {};
-                keys.forEach((k, i) => newRow[k] = groupItems[0][k]); // Copy grouping keys
-                for (const aggField in aggDefinitions) {
-                    const [sourceField, aggFnName] = aggDefinitions[aggField];
-                    const values = groupItems.map(item => item[sourceField]);
-                    if (aggFnName === 'sum') {
-                        newRow[aggField] = values.reduce((sum, val) => sum + val, 0);
-                    } else if (aggFnName === 'mean') {
-                        newRow[aggField] = values.reduce((sum, val) => sum + val, 0) / values.length;
-                    }
-                    // Add other aggregation functions as needed
-                }
-                result.push(newRow);
-            }
-            return {
-                reset_index: function() { return result; }
-            };
-        }
-    };
-};
-
 
 
 async function render() {
   const year = +document.getElementById('year-slider').value;
-  const state = document.getElementById('state-select').value;
+  const selectedState = document.getElementById('state-select').value;
   document.getElementById('year-label').textContent = year;
 
   const { choroplethData, floodDotData } = getMapValues(year);
-  const lineValues = getLineValues(year, state);
+  const lineValues = getLineValues(year, selectedState);
+
+  // Helper to get max values for scales, handling empty/null data
+  // Ensures min domain is not 0 for log scales if all values are 0
+  const getMax = (data, field, defaultValue = 1) => {
+    if (!data || data.length === 0) return defaultValue;
+    const values = data.map(d => d[field]).filter(v => typeof v === 'number' && !isNaN(v) && v > 0); // Filter for positive numbers
+    if (values.length === 0) return defaultValue; // If all are 0 or less, return default
+    return d3.max(values);
+  };
+
+  // Get max values for dynamic scale domains
+  const maxRainfallDensity = getMax(choroplethData.map(d => ({ rainfall: d.rainfall })), 'rainfall', 1); // Extract 'rainfall' from choroplethData objects
+  const maxFloodCountMap = getMax(floodDotData, 'AnnualFloodCount', 1);
+  const maxAnnualRainfallLine = getMax(lineValues, 'AverageAnnualRainfall', 1);
+  const maxFloodCountLine = getMax(lineValues, 'AnnualFloodCount', 1);
+
 
   // === MAP SPEC ===
   const mapSpec = {
@@ -250,7 +219,6 @@ async function render() {
     "background": "white",
     "width": 1050,
     "height": 650,
-    // Combined title and subtitle for the map
     "title": {
       "text": "Average Annual Rainfall Density (mm/km²) & Flood Incidents in Malaysia",
       "subtitle": [
@@ -306,14 +274,14 @@ async function render() {
             "from": {"data":{"values": choroplethData},"key":"State","fields":["rainfall"]},
             "as": "rainfall_data"
           },
-          {"calculate": "isValid(datum.rainfall_data.rainfall) ? datum.rainfall_data.rainfall : null", "as": "rainfall_density"}
+          {"calculate": "isValid(datum.rainfall_data) ? datum.rainfall_data : null", "as": "rainfall_density"}
         ],
         "mark":{"type":"geoshape","stroke":"white"},
         "encoding":{
           "color":{
             "field":"rainfall_density",
             "type":"quantitative",
-            "scale":{"type":"log","scheme":"blues"},
+            "scale":{"type":"log","scheme":"blues", "domainMax": maxRainfallDensity * 1.1},
             "title":"Density (mm/km²)",
             "legend": {
               "orient": "bottom-right",
@@ -327,21 +295,21 @@ async function render() {
           },
           "stroke": {
             "condition": {
-              "test": state === 'All States' ? "false" : `datum.properties.NAME_1 === '${state}'`,
+              "test": selectedState === 'All States' ? "false" : `datum.properties.NAME_1 === '${selectedState}'`,
               "value": "black"
             },
             "value": "white"
           },
           "strokeWidth": {
             "condition": {
-              "test": state === 'All States' ? "false" : `datum.properties.NAME_1 === '${state}'`,
+              "test": selectedState === 'All States' ? "false" : `datum.properties.NAME_1 === '${selectedState}'`,
               "value": 2
             },
             "value": 0.5
           },
           "opacity":{
             "condition":{
-              "test": state === 'All States' ? "true" : `datum.properties.NAME_1 === '${state}'`,
+              "test": selectedState === 'All States' ? "true" : `datum.properties.NAME_1 === '${selectedState}'`,
               "value":1
             },
             "value":0.4
@@ -355,33 +323,48 @@ async function render() {
       {
         // Dot map layer for Annual Flood Count
         "data": {
-          "url": "malaysia_state.json", // Use the same topojson for geometry
-          "format": {"type": "topojson", "feature": "malaysia_state"}
+          "url": "malaysia_state_with_centroid.json", // Use the same topojson for geometry
         },
         "transform": [
-          {
-            "lookup": "properties.NAME_1",
-            "from": {"data":{"values": floodDotData},"key":"State","fields":["AnnualFloodCount"]},
+        {"filter": "isValid(datum.properties) && isValid(datum.properties.NAME_1)"},
+
+        // Normalize names (remove 'Wilayah Persekutuan ')
+        {
+            "calculate": "replace(datum.properties.NAME_1, 'Wilayah Persekutuan ', '')",
+            "as": "normalized_state"
+        },
+
+        // Lookup flood data by state name
+        {
+            "lookup": "normalized_state",
+            "from": {
+            "data": {"values": floodDotData},
+            "key": "State",
+            "fields": ["Annual Flood Count"]
+            },
             "as": "flood_data"
-          },
-          {"calculate": "isValid(datum.flood_data.AnnualFloodCount) ? datum.flood_data.AnnualFloodCount : null", "as": "current_flood_count"},
-          {"filter": "datum.current_flood_count > 0"}, // Only show dots for states with floods
-          {"geopoint": "properties.NAME_1"} // Calculate centroid for each state geometry
+        },
+
+        // Default missing flood_data to 0
+        {
+            "calculate": "isValid(datum.flood_data) ? datum.flood_data : 0",
+            "as": "current_flood_count"
+        }
         ],
         "mark": {"type": "point", "filled": true, "stroke": "black", "strokeWidth": 0.5, "opacity": 0.8},
         "encoding": {
-          "longitude": {"field": "center_lon", "type": "quantitative"},
-          "latitude": {"field": "center_lat", "type": "quantitative"},
+          "longitude": {"field": "properties.centroid[0]", "type": "quantitative"},
+          "latitude": {"field": "properties.centroid[1]", "type": "quantitative"},
           "size": {
             "field": "current_flood_count",
             "type": "quantitative",
-            "scale": {"rangeMin": 50, "rangeMax": 1000}, // Adjust max size for visibility
+            "scale": {"rangeMin": 50, "rangeMax": 1000, "domainMax": maxFloodCountMap * 1.2},
             "legend": {"title": "Districts Flooded", "orient": "bottom-left", "offset": 10}
           },
           "color": {
             "field": "current_flood_count",
             "type": "quantitative",
-            "scale": {"range": ["#fef0d9", "#fc8d59", "#d7301f"], "type": "log", "base": 2, "nice": true}, // Log scale for better distinction
+            "scale": {"range": ["#fef0d9", "#fc8d59", "#d7301f"], "type": "threshold", "domain": [1, 2, 5, 10, 20, 30]},
             "title": "Districts Flooded",
             "legend": null // Hide legend if size also encodes it, or keep one
           },
@@ -392,14 +375,18 @@ async function render() {
         }
       }
     ],
-    "resolve": {"scale": {"color": "independent", "size": "independent"}} // Important for separate legends if both are used
+    "config": {
+      "legend": {
+        "titleLimit": 150
+      }
+    }
   };
 
   // === LINE CHART SPEC ===
   const lineSpec = {
     "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
     "title": {
-      "text": `Annual Rainfall & Flood Incidents in ${state} (2000-2010)`,
+      "text": `Annual Rainfall & Flood Incidents in ${selectedState} (2000-2010)`,
       "subtitle": "Average Annual Rainfall (mm) on left axis, Districts affected by floods on right axis.",
       "fontSize": 24,
       "subtitleFontSize": 12,
@@ -412,7 +399,7 @@ async function render() {
     "layer": [
       {
         // Layer for Rainfall Line
-        "mark": {"type":"line","point":true,"interpolate":"monotone", "color": "steelblue"},
+        "mark": {"type":"line","point":true,"interpolate":"monotone"},
         "encoding":{
           "x":{
             "field":"Year",
@@ -431,10 +418,10 @@ async function render() {
               "titleFontSize": 18,
               "labelFontSize": 16
             },
-             "scale": {"domainMax": d3.max(lineValues, d => d.AverageAnnualRainfall) * 1.1} // Dynamically adjust Y domain
+            "scale": {"domainMax": maxAnnualRainfallLine * 1.1}
           },
           "color":{
-            "field":"State", // For the rainfall line, still color by state for 'All States' or single state
+            "field":"State", // Color by State to get multiple lines for 'All States'
             "type":"nominal",
             "legend":{
               "title":"State",
@@ -443,11 +430,16 @@ async function render() {
               "titleFontSize": 16,
               "labelFontSize": 14,
               "labelLimit": 200
-            }
+            },
+            // Use a consistent color scheme for states across visualizations
+            "scheme": "category10"
           },
           "opacity":{
-            "condition":{"test": state === 'All States' ? "true" : `datum.State === '${state}'`, "value":1},
-            "value":0.7 // Make other states semi-transparent for 'All States'
+            // Dim other states if a specific state is selected.
+            // If 'All States' is selected, all states are fully opaque (value:1 from 'true').
+            // If a single state is selected, only matching datum.State === selectedState gets opacity 1.
+            "condition":{"test": selectedState === 'All States' ? "true" : `datum.State === '${selectedState}'`, "value":1},
+            "value":0.2
           },
           "tooltip":[
             {"field":"State"},
@@ -469,31 +461,31 @@ async function render() {
               "title": "Districts Flooded",
               "titleFontSize": 18,
               "labelFontSize": 16,
-              "orient": "right", // Put on right for dual axis
-              "grid": false // Hide grid lines for right axis
+              "orient": "right",
+              "grid": false
             },
-            "scale": {"domainMax": d3.max(lineValues, d => d.AnnualFloodCount) * 1.2} // Dynamically adjust Y domain
+            "scale": {"domainMax": maxFloodCountLine * 1.2}
           },
           "color": {
             "field": "AnnualFloodCount",
             "type": "quantitative",
-            "scale": {"range": ["#ffffcc", "#ffeda0", "#feb24c", "#fd8d3c", "#e31a1c", "#bd0026", "#800026"], "type": "threshold", "domain": [1, 2, 5, 10, 20, 30]}, // Threshold scale for flood count
+            "scale": {"range": ["#ffffcc", "#ffeda0", "#feb24c", "#fd8d3c", "#e31a1c", "#bd0026", "#800026"], "type": "threshold", "domain": [1, 2, 5, 10, 20, 30]},
             "title": "Districts Flooded",
             "legend": {"orient": "right", "offset": 50, "titleFontSize": 14, "labelFontSize": 12}
           },
           "size": {
             "field": "AnnualFloodCount",
             "type": "quantitative",
-            "scale": {"rangeMin": 20, "rangeMax": 400}, // Adjust dot size based on count
-            "legend": null // Hide size legend if color also encodes it
+            "scale": {"rangeMin": 20, "rangeMax": 400, "domainMax": maxFloodCountLine * 1.2},
+            "legend": null
           },
           "opacity":{
-            "condition":{"test": state === 'All States' ? "true" : `datum.State === '${state}'`, "value":1},
-            "value":0.7
+            "condition":{"test": selectedState === 'All States' ? "true" : `datum.State === '${selectedState}'`, "value":1},
+            "value":0.2
           },
           "tooltip": [
-            {"field":"State"},
-            {"field":"Year"},
+            {"field":"State", "title": "State:"},
+            {"field":"Year", "title": "Year:"},
             {"field":"AverageAnnualRainfall", "title":"Rainfall (mm)", "format": ".2f"},
             {"field":"AnnualFloodCount", "title":"Districts Flooded", "format": "d"}
           ]
@@ -501,7 +493,7 @@ async function render() {
       }
     ],
     "resolve": {
-      "scale": {"y": "independent", "color": "independent"}, // Crucial for dual Y-axis and independent color legends
+      "scale": {"y": "independent", "color": "independent"}, // Keep y-scales independent, but resolve color for line vs points for FloodCount differently
       "legend": {"color": "independent"} // Ensure both color legends are shown independently
     },
     "config": {
@@ -512,9 +504,10 @@ async function render() {
   };
 
   // Update line chart title based on selected state
-  lineSpec.title.text = `Annual Rainfall & Flood Incidents in ${state} (2000-2010)`;
-  if (state === 'All States') {
+  if (selectedState === 'All States') {
       lineSpec.title.text = `National Annual Rainfall & Flood Incidents (2000-2010)`;
+  } else {
+      lineSpec.title.text = `Annual Rainfall & Flood Incidents in ${selectedState} (2000-2010)`;
   }
 
 
