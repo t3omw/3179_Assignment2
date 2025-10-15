@@ -92,9 +92,9 @@
     <div class="controls-and-map-row">
       <div class="controls">
         <label><strong>Year</strong></label><br>
-        <input id="year-slider" type="range" min="2000" max="2010" step="1" value="2000">
+        <input id="year-slider" type="range" min="2001" max="2010" step="1" value="2001"> <!-- Changed initial value to 2001 -->
         <div style="text-align:right;font-weight:bold;">
-          <span id="year-label">2000</span>
+          <span id="year-label">2001</span> <!-- Changed initial text to 2001 -->
         </div>
         <hr>
         <label><strong>State</strong></label><br>
@@ -136,14 +136,14 @@ async function loadData() {
 
   // Populate rainfallDensityData for the choropleth map
   rainfallDensityData = parsedData.map(r => ({
-    State: r['State Name'].trim(),
+    State: r['State Name'].trim(), // Keep original trim for choropleth lookup
     Year: +r.YEAR,
     RainfallPerKm2: +r.Annual_Density_mm_per_km2
   }));
 
   // Populate floodSummary for flood dots and line chart
   floodSummary = parsedData.map(r => ({
-    State: r['State Name'].trim(),
+    State: r['State Name'].trim(), // Keep original trim for line chart lookup
     Year: +r.YEAR,
     AnnualFloodCount: +r.Annual_Flood_Count,
     AverageAnnualRainfall: +r.Average_Annual_Rainfall
@@ -156,11 +156,11 @@ async function loadData() {
 }
 
 function getMapValues(year) {
-  // Use rainfallDensityData for choropleth
   const choroplethData = rainfallDensityData.filter(r => r.Year === year)
                 .map(r => ({ State: r.State, rainfall: r.RainfallPerKm2 }));
   
   const floodDotData = floodSummary.filter(r => r.Year === year);
+  
   return { choroplethData, floodDotData };
 }
 
@@ -177,7 +177,7 @@ async function render() {
 
   const { choroplethData, floodDotData } = getMapValues(year);
   console.log('Flood Dot States:', [...new Set(floodDotData.map(d => d.State))]);
-    console.log(floodDotData);
+  console.log('Flood Dot Data for year', year, ':', floodDotData);
 
   const lineValues = getLineValues(year, selectedState);
 
@@ -192,6 +192,13 @@ async function render() {
   const maxFloodCountMap = getMax(floodDotData, 'AnnualFloodCount', 1);
   const maxAnnualRainfallLine = getMax(lineValues, 'AverageAnnualRainfall', 1);
   const maxFloodCountLine = getMax(lineValues, 'AnnualFloodCount', 1);
+
+  // Prepare flood dot data for Vega (apply normalization here to match GeoJSON transform)
+  const dotValues = floodDotData.map(d => ({
+    State: d.State.trim().replace('Wilayah Persekutuan ', '').toLowerCase(), // Apply consistent normalization
+    AnnualFloodCount: d.AnnualFloodCount,
+    AverageAnnualRainfall: d.AverageAnnualRainfall
+  }));
 
   // === MAP SPEC ===
   const mapSpec = {
@@ -264,7 +271,7 @@ async function render() {
               "offset": 10,
               "titleLimit": 150,
               "labelLimit": 100,
-              "format": ".3f",
+              "format": ".2f",
               "titleFontSize": 14,
               "labelFontSize": 12
             }
@@ -292,55 +299,54 @@ async function render() {
           },
           "tooltip":[
             {"field":"properties.NAME_1","title":"State"},
-            {"field":"rainfall_data","title":"Density (mm/km²)","format":".4f"}
+            {"field":"rainfall_data","title":"Density (mm/km²)","format":".2f"}
           ]
         }
       },
       {
         "data": {
           "url": "malaysia_state_with_centroid.json",
+          "format": {"type": "json", "property": "features"}
         },
         "transform": [
-          {"filter": "isValid(datum.properties) && isValid(datum.properties.NAME_1)"},
           {
-            "calculate": "replace(datum.properties.NAME_1, 'Wilayah Persekutuan ', '')",
+            // Normalize GeoJSON state names to match 'dotValues'
+            "calculate": "lower(trim(replace(datum.properties && datum.properties.NAME_1 ? datum.properties.NAME_1 : datum.NAME_1, 'Wilayah Persekutuan ', '')))",
             "as": "normalized_state"
           },
           {
             "lookup": "normalized_state",
             "from": {
-              "data": {"values": floodDotData},
+              "data": {"values": dotValues},
               "key": "State",
-              "fields": ["AnnualFloodCount"]
+              "fields": ["AnnualFloodCount", "AverageAnnualRainfall"]
             },
-            "as": "flood_data"
+            "as": ["AnnualFloodCount", "AverageAnnualRainfall"]
           },
-          // CORRECTED: Extract the numerical value from flood_data object
+          {"filter": "datum.AnnualFloodCount > 0"},
           {
-            "calculate": "datum.flood_data && isValid(datum.flood_data.AnnualFloodCount) ? datum.flood_data.AnnualFloodCount : 0",
-            "as": "current_flood_count"
+            "calculate": "(datum.properties && datum.properties.centroid ? datum.properties.centroid[0] : datum.centroid[0])",
+            "as": "longitude"
+          },
+          {
+            "calculate": "(datum.properties && datum.properties.centroid ? datum.properties.centroid[1] : datum.centroid[1])",
+            "as": "latitude"
           }
         ],
-        "mark": {"type": "point", "filled": true, "stroke": "black", "strokeWidth": 0.5, "opacity": 0.8},
+        "mark": {"type": "point", "filled": true, "stroke": "black", "strokeWidth": 0.5, "opacity": 0.8, "color": "purple"},
         "encoding": {
-          "longitude": {"field": "properties.centroid[0]", "type": "quantitative"},
-          "latitude": {"field": "properties.centroid[1]", "type": "quantitative"},
+          "longitude": {"field": "longitude", "type": "quantitative"},
+          "latitude": {"field": "latitude", "type": "quantitative"},
           "size": {
-            "field": "current_flood_count",
+            "field": "AnnualFloodCount",
             "type": "quantitative",
-            "scale": {"rangeMin": 50, "rangeMax": 1000, "domainMax": maxFloodCountMap * 1.2},
-            "legend": {"title": "Districts Flooded", "orient": "bottom-left", "offset": 10}
-          },
-          "color": {
-            "field": "current_flood_count",
-            "type": "quantitative",
-            "scale": {"range": ["#fef0d9", "#fc8d59", "#d7301f"], "type": "threshold", "domain": [1, 2, 5, 10, 20, 30]},
-            "title": "Districts Flooded",
-            "legend": null
+            "scale": {"range": [100, 1500]},
+            "legend": {"title": "Flood Incidents"}
           },
           "tooltip": [
-            {"field": "properties.NAME_1", "title": "State"},
-            {"field": "current_flood_count", "title": "Districts Flooded", "format": "d"}
+            {"field": "normalized_state", "title": "State"},
+            {"field": "AnnualFloodCount", "title": "Flood Count"},
+            {"field": "AverageAnnualRainfall", "title": "Avg Rainfall (mm)", "format": ",.2f"}
           ]
         }
       }
@@ -359,7 +365,7 @@ async function render() {
       "text": selectedState === 'All States' 
         ? `National Annual Rainfall & Flood Incidents (2000-2010)`
         : `Annual Rainfall & Flood Incidents in ${selectedState} (2000-2010)`,
-      "subtitle": "Average Annual Rainfall (mm) on left axis, Districts affected by floods on right axis.",
+    //   "subtitle": "Average Annual Rainfall (mm) on left axis, Districts affected by floods on right axis.",
       "fontSize": 24,
       "subtitleFontSize": 12,
       "subtitleFont": "Arial"
@@ -411,13 +417,20 @@ async function render() {
           "tooltip":[
             {"field":"State"},
             {"field":"Year"},
-            {"field":"AverageAnnualRainfall", "title":"Rainfall (mm)", "format": ".2f"},
+            {"field":"AverageAnnualRainfall", "title":"Rainfall (mm)", "format": ",.2f"},
             {"field":"AnnualFloodCount", "title":"Districts Flooded", "format": "d"}
           ]
         }
       },
       {
-        "mark": {"type": "point", "filled": true, "shape": "circle", "stroke": "black", "strokeWidth": 0.5},
+        "mark": {
+          "type": "point",
+          "filled": true,
+          "shape": "circle",
+          "stroke": "black",
+          "strokeWidth": 0.5,
+          "opacity": 0.9
+        },
         "encoding": {
           "x": { "field": "Year", "type": "ordinal" },
           "y": {
@@ -435,7 +448,8 @@ async function render() {
           "color": {
             "field": "AnnualFloodCount",
             "type": "quantitative",
-            "scale": {"range": ["#ffffcc", "#ffeda0", "#feb24c", "#fd8d3c", "#e31a1c", "#bd0026", "#800026"], "type": "threshold", "domain": [1, 2, 5, 10, 20, 30]},
+            // "scale": {"range": ["#ffffcc", "#ffeda0", "#feb24c", "#fd8d3c", "#e31a1c", "#bd0026", "#800026"], "type": "threshold", "domain": [1, 2, 5, 10, 20, 30]},
+            "scale": {"range": ["#ffffcc", "#ffeda0", "#feb24c", "#fd8d3c", "#e31a1c", "#bd0026"], "type": "threshold", "domain": [1, 2, 5, 10, 15]},
             "title": "Districts Flooded",
             "legend": {"orient": "right", "offset": 50, "titleFontSize": 14, "labelFontSize": 12}
           },
@@ -452,7 +466,7 @@ async function render() {
           "tooltip": [
             {"field":"State", "title": "State:"},
             {"field":"Year", "title": "Year:"},
-            {"field":"AverageAnnualRainfall", "title":"Rainfall (mm)", "format": ".2f"},
+            {"field":"AverageAnnualRainfall", "title":"Rainfall (mm)", "format": ",.2f"},
             {"field":"AnnualFloodCount", "title":"Districts Flooded", "format": "d"}
           ]
         }
