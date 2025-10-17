@@ -24,7 +24,7 @@
     .main-content-wrapper {
       display: flex;
       flex-direction: column;
-      align-items: flex-start;
+      align-items: center; /* Changed to center for better layout with new charts */
       width: 100%;
       max-width: 1700px;
       margin: 20px auto;
@@ -37,8 +37,10 @@
       flex-wrap: wrap;
       justify-content: flex-start;
       width: 100%;
+      max-width: 1300px; /* Adjusted to fit content better */
       margin-bottom: 50px;
-      margin-left: 100px;
+      margin-left: auto; /* Center the row */
+      margin-right: auto;
     }
 
     .controls {
@@ -61,11 +63,26 @@
       box-shadow: 0 2px 5px rgba(0,0,0,0.1);
     }
 
-    #line {
-      width: 1650px;
-      height: 550px;
-      margin-top: 50px;
-      padding-left: 180px;
+    .chart-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center; /* Center the charts */
+        width: 100%;
+        max-width: 950px; /* Constrain chart width for centering */
+        margin-top: 50px; /* Space from the map */
+    }
+
+    #annualRainfallLineChart,
+    #floodIncidentsDotChart,
+    #timberProductionLineChart,
+    #agricultureGdpLineChart { /* Added new chart ID */
+      width: 100%; /* Use full container width */
+      height: 450px; /* Adjusted height for individual charts */
+      margin-bottom: 30px; /* Space between the two new charts */
+      padding: 0;
+      background: #fff;
+      border-radius: 8px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
     }
 
     input[type=range] {
@@ -86,33 +103,33 @@
   </style>
 </head>
 <body>
-  <h1>Annual Rainfall Malaysia (2001-2010)</h1>
+  <h1>Annual Rainfall Malaysia (2000-2010)</h1>
 
   <div class="main-content-wrapper">
     <div class="controls-and-map-row">
       <div class="controls">
         <label><strong>Year</strong></label><br>
-        <input id="year-slider" type="range" min="2001" max="2010" step="1" value="2001"> <!-- Changed initial value to 2001 -->
+        <input id="year-slider" type="range" min="2001" max="2010" step="1" value="2001">
         <div style="text-align:right;font-weight:bold;">
-          <span id="year-label">2001</span> <!-- Changed initial text to 2001 -->
+          <span id="year-label">2001</span>
         </div>
         <hr>
         <label><strong>State</strong></label><br>
         <select id="state-select">
-          <option>All States</option>
-          <option>Johor</option><option>Kedah</option><option>Kelantan</option>
-          <option>Kuala Lumpur</option><option>Labuan</option><option>Melaka</option>
-          <option>Negeri Sembilan</option><option>Pahang</option><option>Perak</option>
-          <option>Perlis</option><option>Pulau Pinang</option><option>Putrajaya</option>
-          <option>Sabah</option><option>Sarawak</option><option>Selangor</option>
-          <option>Terengganu</option>
+          <!-- Options will be dynamically loaded here -->
         </select>
       </div>
 
       <div id="map"></div>
     </div>
 
-    <div id="line"></div>
+    <!-- New divs for separate charts -->
+    <div class="chart-container">
+      <div id="annualRainfallLineChart"></div>
+      <div id="floodIncidentsDotChart"></div>
+      <div id="timberProductionLineChart"></div>
+      <div id="agricultureGdpLineChart"></div>
+    </div>
   </div>
 
 <script>
@@ -122,37 +139,49 @@ function parseCSV(text) {
   return lines.map(l => {
     const vals = l.split(',');
     const obj = {};
-    cols.forEach((c, i) => obj[c] = vals[i]);
+    cols.forEach((c, i) => obj[c.trim()] = vals[i].trim());
     return obj;
   });
 }
 
-let rainfallDensityData = []; // This will hold the data for the choropleth map
-let floodSummary = []; // This will hold the data for flood dots and line chart
+let rainfallDensityData = [];
+let floodSummary = [];
+// timberProductionData no longer needed as an empty global array
 
 async function loadData() {
+  // --- Load Flood and Rainfall Data ---
   const csvText = await fetch('processed_flood_summary_by_state_year.csv').then(r => r.text());
   const parsedData = parseCSV(csvText);
 
-  // Populate rainfallDensityData for the choropleth map
   rainfallDensityData = parsedData.map(r => ({
-    State: r['State Name'].trim(), // Keep original trim for choropleth lookup
+    State: r['State Name'],
     Year: +r.YEAR,
     RainfallPerKm2: +r.Annual_Density_mm_per_km2
   }));
 
-  // Populate floodSummary for flood dots and line chart
   floodSummary = parsedData.map(r => ({
-    State: r['State Name'].trim(), // Keep original trim for line chart lookup
+    State: r['State Name'],
     Year: +r.YEAR,
     AnnualFloodCount: +r.Annual_Flood_Count,
     AverageAnnualRainfall: +r.Average_Annual_Rainfall
   }));
   
-  // Debug: Check what states and years we have
-  console.log('Rainfall Density Data sample:', rainfallDensityData.slice(0, 3));
-  console.log('Flood data sample:', floodSummary.slice(0, 3));
-  console.log('Unique states in flood data:', [...new Set(floodSummary.map(r => r.State))]);
+  // Populate state-select dropdown
+  const stateSelect = document.getElementById('state-select');
+  stateSelect.innerHTML = ''; // Clear existing options
+
+  const allStatesOption = document.createElement('option');
+  allStatesOption.value = 'All States';
+  allStatesOption.textContent = 'All States';
+  stateSelect.appendChild(allStatesOption);
+
+  const uniqueStates = [...new Set(floodSummary.map(r => r.State))].sort();
+  uniqueStates.forEach(state => {
+    const option = document.createElement('option');
+    option.value = state;
+    option.textContent = state;
+    stateSelect.appendChild(option);
+  });
 }
 
 function getMapValues(year) {
@@ -164,10 +193,11 @@ function getMapValues(year) {
   return { choroplethData, floodDotData };
 }
 
-function getLineValues(year, state) {
-  const filtered = floodSummary.filter(r => r.Year <= year);
-  if (state !== 'All States') return filtered.filter(r => r.State === state);
-  return filtered;
+function getLineValues(state) {
+  if (state !== 'All States') {
+    return floodSummary.filter(r => r.State === state);
+  }
+  return floodSummary;
 }
 
 async function render() {
@@ -176,10 +206,8 @@ async function render() {
   document.getElementById('year-label').textContent = year;
 
   const { choroplethData, floodDotData } = getMapValues(year);
-  console.log('Flood Dot States:', [...new Set(floodDotData.map(d => d.State))]);
-  console.log('Flood Dot Data for year', year, ':', floodDotData);
-
-  const lineValues = getLineValues(year, selectedState);
+  
+  const lineValues = getLineValues(selectedState);
 
   const getMax = (data, field, defaultValue = 1) => {
     if (!data || data.length === 0) return defaultValue;
@@ -193,25 +221,24 @@ async function render() {
   const maxAnnualRainfallLine = getMax(lineValues, 'AverageAnnualRainfall', 1);
   const maxFloodCountLine = getMax(lineValues, 'AnnualFloodCount', 1);
 
-  // Prepare flood dot data for Vega (apply normalization here to match GeoJSON transform)
   const dotValues = floodDotData.map(d => ({
-    State: d.State.trim().replace('Wilayah Persekutuan ', '').toLowerCase(), // Apply consistent normalization
+    State: d.State.trim().replace('Wilayah Persekutuan ', '').toLowerCase(),
     AnnualFloodCount: d.AnnualFloodCount,
     AverageAnnualRainfall: d.AverageAnnualRainfall
   }));
 
-  // === MAP SPEC ===
+  // === MAP SPEC (Your existing code) ===
   const mapSpec = {
     "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
     "background": "white",
     "width": 1050,
     "height": 650,
     "title": {
-      "text": "Average Annual Rainfall Density (mm/km²) in Malaysia (2001-2010)",
-      "subtitle": [
-        "Rainfall measured in millimeters per square kilometer (mm/km²).",
-        "Source: Public Sector Open Data Portal (DTSA)."
-      ],
+      "text": "Average Annual Rainfall Density (mm/km²) in Malaysia (2000-2010)",
+      // "subtitle": [
+      //   "Rainfall measured in millimeters per square kilometer (mm/km²).",
+      //   "Source: Public Sector Open Data Portal (DTSA)."
+      // ],
       "fontSize": 34,
       "subtitleFontSize": 14,
       "subtitleFont": "Arial",
@@ -238,13 +265,34 @@ async function render() {
         }
       },
       {
-        "data": {"graticule": true},
+        "data": {
+          "graticule": {
+            "stepMinor": [5, 5]
+          }
+        },
         "mark": {
           "type": "geoshape",
           "fill": null,
           "stroke": "#d4ccc0",
-          "strokeWidth": 0.8,
+          "strokeWidth": 0.5,
           "strokeDash": [2, 2]
+        }
+      },
+      {
+        "data": {
+          "url": "malaysia_state.json",
+          "format": {"type": "topojson", "feature": "malaysia_state"}
+        },
+        "mark": {
+          "type": "geoshape",
+          "fill": "#cccccc",
+          "stroke": "white",
+          "strokeWidth": 0.5
+        },
+        "encoding": {
+            "tooltip":[
+                {"field":"properties.NAME_1","title":"State/Territory:"}
+            ]
         }
       },
       {
@@ -298,8 +346,8 @@ async function render() {
             "value":0.4
           },
           "tooltip":[
-            {"field":"properties.NAME_1","title":"State"},
-            {"field":"rainfall_data","title":"Density (mm/km²)","format":".2f"}
+            {"field":"properties.NAME_1","title":"State:"},
+            {"field":"rainfall_data","title":"Rainfall Density (mm/km²):","format":".2f"}
           ]
         }
       },
@@ -310,7 +358,6 @@ async function render() {
         },
         "transform": [
           {
-            // Normalize GeoJSON state names to match 'dotValues'
             "calculate": "lower(trim(replace(datum.properties && datum.properties.NAME_1 ? datum.properties.NAME_1 : datum.NAME_1, 'Wilayah Persekutuan ', '')))",
             "as": "normalized_state"
           },
@@ -329,7 +376,7 @@ async function render() {
             "as": "longitude"
           },
           {
-            "calculate": "(datum.properties && datum.properties.centroid ? datum.properties.centroid[1] : datum.centroid[1])",
+            "calculate": "(datum.properties && datum.properties.centroid ? datum.properties.centroid[1] : datum.properties.centroid[1])",
             "as": "latitude"
           }
         ],
@@ -344,9 +391,9 @@ async function render() {
             "legend": {"title": "Flood Incidents"}
           },
           "tooltip": [
-            {"field": "properties.NAME_1", "title": "State"},
-            {"field": "AnnualFloodCount", "title": "Flood Count"},
-            {"field": "AverageAnnualRainfall", "title": "Average Rainfall (mm)", "format": ",.2f"}
+            {"field": "properties.NAME_1", "title": "State:"},
+            {"field": "AnnualFloodCount", "title": "Flood Count:"},
+            {"field": "AverageAnnualRainfall", "title": "Average Rainfall (mm):", "format": ",.2f"}
           ]
         }
       }
@@ -358,123 +405,65 @@ async function render() {
     }
   };
 
-  // === LINE CHART SPEC ===
-  const lineSpec = {
+  // === ANNUAL RAINFALL LINE CHART SPEC (Your existing code) ===
+  const annualRainfallLineChartSpec = {
     "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
     "title": {
-      "text": selectedState === 'All States' 
-        ? `National Annual Rainfall & Flood Incidents (2001-2010)`
-        : `Annual Rainfall & Flood Incidents in ${selectedState} (2001-2010)`,
-    //   "subtitle": "Average Annual Rainfall (mm) on left axis, Districts affected by floods on right axis.",
+      "text": selectedState === 'All States'
+        ? `National Annual Average Rainfall (2000-2010)`
+        : `Annual Average Rainfall in ${selectedState} (2000-2010)`,
+      "subtitle": "Rainfall measured in millimeters (mm).",
       "fontSize": 24,
       "subtitleFontSize": 12,
-      "subtitleFont": "Arial"
+      "subtitleFont": "Arial",
+      "anchor": "start"
     },
     "width": 950,
-    "height": 550,
-    "padding": {"left": 30, "right": 30, "top": 5, "bottom": 5},
+    "height": 350,
+    "padding": {"left": 5, "right": 5, "top": 5, "bottom": 5},
     "data": {"values": lineValues},
-    "layer": [
-      {
-        "mark": {"type":"line","point":true,"interpolate":"monotone"},
-        "encoding":{
-          "x":{
-            "field":"Year",
-            "type":"ordinal",
-            "axis": {
-              "title":"Year",
-              "titleFontSize": 18,
-              "labelFontSize": 16
-            }
-          },
-          "y":{
-            "field":"AverageAnnualRainfall",
-            "type":"quantitative",
-            "axis": {
-              "title":"Average Annual Rainfall (mm)",
-              "titleFontSize": 18,
-              "labelFontSize": 16
-            },
-            "scale": {"domainMax": maxAnnualRainfallLine * 1.1}
-          },
-          "color":{
-            "field":"State",
-            "type":"nominal",
-            "legend":{
-              "title":"State",
-              "orient":"top-right",
-              "offset": 10,
-              "titleFontSize": 16,
-              "labelFontSize": 14,
-              "labelLimit": 200
-            },
-            "scale": {"scheme": "category10"}
-          },
-          "opacity":{
-            "condition":{"test": selectedState === 'All States' ? "true" : `datum.State === '${selectedState}'`, "value":1},
-            "value":0.2
-          },
-          "tooltip":[
-            {"field":"State"},
-            {"field":"Year"},
-            {"field":"AverageAnnualRainfall", "title":"Rainfall (mm)", "format": ",.2f"},
-            {"field":"AnnualFloodCount", "title":"Districts Flooded", "format": "d"}
-          ]
+    "mark": {"type":"line","point":true,"interpolate":"monotone"},
+    "encoding":{
+      "x":{
+        "field":"Year",
+        "type":"ordinal",
+        "axis": {
+          "title":"Year",
+          "titleFontSize": 18,
+          "labelFontSize": 16
         }
       },
-      {
-        "mark": {
-          "type": "point",
-          "filled": true,
-          "shape": "circle",
-          "stroke": "black",
-          "strokeWidth": 0.5,
-          "opacity": 0.9
+      "y":{
+        "field":"AverageAnnualRainfall",
+        "type":"quantitative",
+        "axis": {
+          "title":"Average Annual Rainfall (mm)",
+          "titleFontSize": 18,
+          "labelFontSize": 16
         },
-        "encoding": {
-          "x": { "field": "Year", "type": "ordinal" },
-          "y": {
-            "field": "AnnualFloodCount",
-            "type": "quantitative",
-            "axis": {
-              "title": "Districts Flooded",
-              "titleFontSize": 18,
-              "labelFontSize": 16,
-              "orient": "right",
-              "grid": false
-            },
-            "scale": {"domainMax": maxFloodCountLine * 1.2}
-          },
-          "color": {
-            "field": "AnnualFloodCount",
-            "type": "quantitative",
-            // "scale": {"range": ["#ffffcc", "#ffeda0", "#feb24c", "#fd8d3c", "#e31a1c", "#bd0026", "#800026"], "type": "threshold", "domain": [1, 2, 5, 10, 20, 30]},
-            "scale": {"range": ["#ffffcc", "#ffeda0", "#feb24c", "#fd8d3c", "#e31a1c", "#bd0026"], "type": "threshold", "domain": [1, 2, 5, 10, 15]},
-            "title": "Districts Flooded",
-            "legend": {"orient": "right", "offset": 50, "titleFontSize": 14, "labelFontSize": 12}
-          },
-          "size": {
-            "field": "AnnualFloodCount",
-            "type": "quantitative",
-            "scale": {"rangeMin": 20, "rangeMax": 400, "domainMax": maxFloodCountLine * 1.2},
-            "legend": null
-          },
-          "opacity":{
-            "condition":{"test": selectedState === 'All States' ? "true" : `datum.State === '${selectedState}'`, "value":1},
-            "value":0.2
-          },
-          "tooltip": [
-            {"field":"State", "title": "State:"},
-            {"field":"Year", "title": "Year:"},
-            {"field":"AverageAnnualRainfall", "title":"Rainfall (mm)", "format": ",.2f"},
-            {"field":"AnnualFloodCount", "title":"Districts Flooded", "format": "d"}
-          ]
+        "scale": {"domainMax": maxAnnualRainfallLine * 1.1}
+      },
+      "color":{
+        "field":"State",
+        "type":"nominal",
+        "legend":{
+          "title":"State",
+          "orient":"right",
+          "offset": 10,
+          "titleFontSize": 16,
+          "labelFontSize": 14,
+          "labelLimit": 200
+        },
+        "scale": {
+          // "scheme": "tableau10"
+          "range": ["#0072B2", "#5F5F5F", "#56B4E9", "#F0E442", "#CC79A7", "#009E73", "#E69F00", "#999999", "#A0CBE8", "#FFB6C1", "#004F6F"]
         }
-      }
-    ],
-    "resolve": {
-      "scale": {"y": "independent", "color": "independent"},
-      "legend": {"color": "independent"}
+      },
+      "tooltip":[
+        {"field":"State", "title": "State:"},
+        {"field":"Year", "title": "Year:"},
+        {"field":"AverageAnnualRainfall", "title":"Rainfall (mm):", "format": ",.2f"}
+      ]
     },
     "config": {
       "legend": {
@@ -483,8 +472,179 @@ async function render() {
     }
   };
 
+  // === ANNUAL FLOOD INCIDENTS DOT CHART SPEC (Your existing code) ===
+  const floodIncidentsDotChartSpec = {
+    "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
+    "title": {
+      "text": selectedState === 'All States'
+        ? `National Annual Flood Incidents (2000-2010)`
+        : `Annual Flood Incidents in ${selectedState} (2000-2010)`,
+      "subtitle": "Number of districts affected by floods.",
+      "fontSize": 24,
+      "subtitleFontSize": 12,
+      "subtitleFont": "Arial",
+      "anchor": "start"
+    },
+    "width": 950,
+    "height": 350,
+    "padding": {"left": 5, "right": 5, "top": 5, "bottom": 5},
+    "data": {"values": lineValues},
+    "mark": {
+      "type": "point",
+      "filled": true,
+      "shape": "circle",
+      "stroke": "black",
+      "strokeWidth": 0.5,
+      "opacity": 0.9
+    },
+    "encoding": {
+      "x": {
+        "field": "Year",
+        "type": "ordinal",
+        "axis": {
+          "title":"Year",
+          "titleFontSize": 18,
+          "labelFontSize": 16
+        }
+      },
+      "y": {
+        "field": "AnnualFloodCount",
+        "type": "quantitative",
+        "axis": {
+          "title": "Districts Flooded",
+          "titleFontSize": 18,
+          "labelFontSize": 16,
+          "grid": false
+        },
+        "scale": {"domainMax": maxFloodCountLine * 1.2}
+      },
+      "color": {
+        "field": "AnnualFloodCount",
+        "type": "quantitative",
+        "scale": {"range": ["#ffffcc", "#ffeda0", "#feb24c", "#fd8d3c", "#e31a1c", "#bd0026"], "type": "threshold", "domain": [1, 2, 5, 10, 15]},
+        "title": "Districts Flooded",
+        "legend": {"orient": "right", "offset": 50, "titleFontSize": 14, "labelFontSize": 12}
+      },
+      "size": {
+        "field": "AnnualFloodCount",
+        "type": "quantitative",
+        "scale": {"rangeMin": 20, "rangeMax": 400, "domainMax": maxFloodCountLine * 1.2},
+        "legend": null
+      },
+      "tooltip": [
+        {"field":"State", "title": "State:"},
+        {"field":"Year", "title": "Year:"},
+        {"field":"AverageAnnualRainfall", "title":"Rainfall (mm):", "format": ",.2f"},
+        {"field":"AnnualFloodCount", "title":"Districts Flooded:", "format": "d"}
+      ]
+    },
+    "config": {
+      "legend": {
+        "titleLimit": 150
+      }
+    }
+  };
+  
+  // === TIMBER PRODUCTION LINE CHART SPEC (LINEAR SCALE, MILLIONS OF TONNES) ===
+  const timberProductionLineChartSpec = {
+    "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
+    "title": {
+        "text": "Malaysia Timber Production by Product (2000-2010)",
+        "subtitle": "Production measured in Millions of Tonnes.",
+        "fontSize": 24,
+        "subtitleFontSize": 12,
+        "subtitleFont": "Arial",
+        "anchor": "start"
+    },
+    "width": 950,
+    "height": 450, 
+    "data": {
+        "url": "processed_timber_production_national.csv" // Direct file path
+    },
+    "transform": [
+        {"filter": "datum.YEAR >= 2000 && datum.YEAR <= 2010"}, // Filter data
+        // Calculate a new field for production in millions of tonnes
+        {"calculate": "datum.Total_Production / 1000000", "as": "Production_Millions"} 
+    ],
+    "mark": {"type": "line", "point": true},
+    "encoding": {
+        "x": {
+            "field": "YEAR",
+            "type": "ordinal",
+            "axis": {"title": "Year"}
+        },
+        "y": {
+            "field": "Production_Millions",
+            "type": "quantitative",
+            "title": "Total Production (Million Tonnes)",
+            "axis": {
+              "format": ".2f"}
+        },
+        "color": {
+            "field": "product",
+            "type": "nominal",
+            "title": "Product Type",
+            "legend": {"orient": "right", "offset": 10},
+            "scale": {
+              // "scheme": "dark2"
+              "range": ["#4477AA", "#66CCEE", "#228833", "#CCBB44"]
+            }
+        },
+        "tooltip": [
+            {"field": "YEAR", "title": "Year:", "type": "ordinal"},
+            {"field": "product", "title": "Product", "type": "nominal"},
+            // Show the original large number in the tooltip for precision
+            {"field": "Total_Production", "type": "quantitative", "title": "Production (Tonnes)", "format": ","} 
+        ]
+    }
+  };
+
+  // === NEW AGRICULTURE GDP LINE CHART SPEC ===
+  const agricultureGdpLineChartSpec = {
+    "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
+    "title": {
+        "text": "Sum of Malaysia Agriculture, Forestry and Fishing GDP Trend (2001-2010)",
+        // "subtitle": "Agriculture, forestry, and fishing value added (% of GDP).",
+        "fontSize": 24,
+        "subtitleFontSize": 12,
+        "subtitleFont": "Arial",
+        "anchor": "start"
+    },
+    "width": 950,
+    "height": 450,
+    "data": {
+        "url": "gdp.csv" // Direct file path to your GDP data
+    },
+    "mark": {"type": "line", "point": true, "color": "purple"},
+    "encoding": {
+        "x": {
+            "field": "Year",
+            "type": "ordinal",
+            "axis": {"title": "Year"}
+        },
+        "y": {
+            "field": "GDP",
+            "type": "quantitative",
+            "title": "Value Added (% of GDP)",
+            "axis": {
+              "format": ".2f",
+              "tickCount": 6,  // Suggest 6 ticks for a 0-12 scale (0, 2, 4, 6, 8, 10, 12)
+                "values": [2, 4, 6, 8, 10] // Explicitly set ticks at 2.0 intervals (adjust this array if needed)
+            }, 
+        },
+        "tooltip": [
+            {"field": "Year", "type": "ordinal"},
+            {"field": "GDP", "type": "quantitative", "title": "GDP", "format": ".2f"}
+        ]
+    }
+  };
+
+
   await vegaEmbed('#map', mapSpec, {actions:false, renderer: 'svg'});
-  await vegaEmbed('#line', lineSpec, {actions:false, renderer: 'svg'});
+  await vegaEmbed('#annualRainfallLineChart', annualRainfallLineChartSpec, {actions:false, renderer: 'svg'});
+  await vegaEmbed('#floodIncidentsDotChart', floodIncidentsDotChartSpec, {actions:false, renderer: 'svg'});
+  await vegaEmbed('#timberProductionLineChart', timberProductionLineChartSpec, {actions:false, renderer: 'svg'});
+  await vegaEmbed('#agricultureGdpLineChart', agricultureGdpLineChartSpec, {actions:false, renderer: 'svg'}); // Embed the new chart
 }
 
 (async function(){
