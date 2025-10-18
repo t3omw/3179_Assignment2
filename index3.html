@@ -11,142 +11,80 @@
   <style>
     body {
       margin: 0;
-      background: #e9e9e9;
-      font-family: Lato, sans-serif;
-    }
-    
-    .large-white-container {
-        background: white;
-        width: 100%;
-        max-width: 2000px;
-        margin: 20px auto;
-        padding: 20px;
-        box-shadow: 0 0 10px rgba(0,0,0,0.1);
-        height: auto;
+      background: #fafafa;
     }
 
     h1 {
       text-align: center;
-      margin-top: 50px;
-      margin-bottom: 50px;
-      font-size: 70px;
-      font-family: Palatino Linotype, serif;
-    }
-
-    h2 {
-      text-align: left;
-      font-size: 24px;
-      font-weight: bold;
+      margin-top: 20px;
+      margin-bottom: 20px;
+      font-size: 55px;
     }
 
     .main-content-wrapper {
       display: flex;
       flex-direction: column;
-      align-items: center; 
+      align-items: center; /* Changed to center for better layout with new charts */
       width: 100%;
       max-width: 1700px;
-      margin-left: -300px;
-      position: relative;
+      margin: 20px auto;
     }
 
-    .map-wrapper {
-      position: relative;
-      margin-bottom: -180px;
-      width: 1050px;
+    .controls-and-map-row {
+      display: flex;
+      gap: 25px;
+      align-items: flex-start;
+      flex-wrap: wrap;
+      justify-content: flex-start;
+      width: 100%;
+      max-width: 1300px; /* Adjusted to fit content better */
+      margin-bottom: 50px;
+      margin-left: auto; /* Center the row */
+      margin-right: auto;
+    }
+
+    .controls {
+      font-family: Arial, sans-serif;
+      width: 220px;
+      background: #fff;
+      padding: 15px;
+      border-radius: 8px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      font-size: 18px;
     }
 
     #map {
       width: 1050px;
       height: 650px;
+      padding: 0;
+      margin: 0;
       background: #fff;
       border-radius: 8px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
     }
 
-    .map-intro-overlay {
-      position: absolute;
-      top: 50px;
-      left: 30px;
-      z-index: 10; /* Ensure it's on top of the map */
-      max-width: 600px;
-
-      background-color: transparent;
-      color: #949494; /* <-- This controls the font COLOR */
-      /* font-size: 1.0em; */
-      font-size: 14px;
-      line-height: 1.2;
-    }
-    
-    .map-controls-container {
-        position: absolute;
-        margin-bottom: 0px;
-        right: -920px;
+    .chart-container {
         display: flex;
         flex-direction: column;
-        gap: 10px;
-        z-index: 10;
-        top: 350px;
-    }
-
-    .map-controls-group {
-        display: flex;
-        flex-direction: column;
-        gap: 10px;
-    }
-
-    .map-controls-item {
-        width: 150px;
-    }
-
-    .chart-row {
-        display: flex;
-        flex-direction: column;
-        margin-top: 150px;
-        margin-left: 580px;
-        align-items: left;
+        align-items: center; /* Center the charts */
         width: 100%;
-        max-width: 2000px;
-        gap: 160px;
+        max-width: 950px; /* Constrain chart width for centering */
+        margin-top: 50px; /* Space from the map */
     }
 
-    .chart-wrapper {
-        display: flex;
-        flex-direction: row;
-        /* justify-content: flex-start; */
-        width: 100%; 
-        max-width: 1800px;
-        align-items: left;
-        gap: 530px;
-    }
-
-  
     #annualRainfallLineChart,
     #floodIncidentsDotChart,
     #timberProductionLineChart,
-    #agricultureGdpLineChart {
-      width: 600px; 
-      height: 450px; 
+    #agricultureGdpLineChart { /* Added new chart ID */
+      width: 100%; /* Use full container width */
+      height: 450px; /* Adjusted height for individual charts */
+      margin-bottom: 30px; /* Space between the two new charts */
       padding: 0;
       background: #fff;
       border-radius: 8px;
-      margin-left: 30px;
-      margin-top: 50px;
-      /* gap: 150px; */
-      align-items: left;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
     }
 
-    .chart-comment {
-        min-width: 700px;
-        padding: 15px; 
-        border-radius: 8px;
-        background: #fff;
-        /* box-shadow: 0 2px 5px rgba(0,0,0,0.1); */
-        font-size: 20px;
-        text-align: left;
-        margin-top: 52px;
-        margin-left: 90px;
-    }
-
-  
     input[type=range] {
       width: 100%;
       margin-bottom: 5px;
@@ -159,206 +97,39 @@
       border: 1px solid #ccc;
       border-radius: 4px;
     }
-
-    .narrative-section h2 {
-      font-size: 32px;
-      margin-bottom: -15px;
-    }
-
-    .narrative-section {
-      font-size: 28px;
-      text-align: left;
-      margin-left: 50px;
-      margin-top: -180px;
-      width: 100%;
-      min-width: 1900px;
-      margin-bottom: -40px;
-    }
-
-    footer hr {
-      border: none;
-      border-top: 1px solid #ddd;
-      margin-top: 80px;
-      margin-bottom: 30px;
-    }
-
-    .metadata-section {
-      width: 100%;
-      min-width: 2000px;
-      font-size: 16px;
-      color: #555;
-      line-height: 1.5;
-    }
-
-    .metadata-section p,
-    .metadata-section ul {
-    margin-bottom: 20px;
-    margin-left: 50px;
-    margin-top: -5px;
-    }
-
-    .metadata-section ul {
-        list-style-position: inside;
-        padding-left: 0;
+    hr {
+      margin: 20px 0;
     }
   </style>
 </head>
 <body>
-  
-  <div class="large-white-container">
-  
-  <h1>Rains & Resilience: Malaysia's Climate and its Economic Echoes (2001-2010)</h1>
-  
+  <h1>Annual Rainfall Malaysia (2000-2010)</h1>
+
   <div class="main-content-wrapper">
-
-    <!-- Map with Controls -->
-    <div class="map-wrapper">
-        <div class="map-intro-overlay">
-          <p>
-            Malaysia's tropical climate is central to its identity and economy,
-            but the annual monsoons also bring the significant threat of
-            flooding. This visualisation explores the intricate relationship between rainfall patterns,
-            the resulting flood incidents, and the tangible impacts on key
-            Malaysian economic sectors like timber and agriculture over a decade.
-          </p>
-          <!-- <p>
-          This visualisation show links between environmental events and their economic
-          consequences for anyone interested in Malaysia's economy and climate as
-          it transforms publicly available datasets on rainfall, floods, timber production, and GDP
-          to reveal insights of Southeast Asian economics.
-          </p> -->
-          <p>
-            This visualisation shows the connection between environmental events (heavy rainfall) 
-            and their social and economic consequences (flooding and impacts on primary industries) 
-            in Malaysia. It aims to provide insight into the vulnerability of these sectors using 
-            publicly available datasets and transform them into climate patterns for individuals 
-            interested in Southeast Asian economics and climate science such as the average Malaysian, 
-            including students and policymakers. No specialised statistical knowledge is required.
-          </p>
-          <p>
-            The visualisation uses a range of carefully selected charts (idioms) to reveal insights
-            which includes a <strong>choropleth map</strong>that shows the geographic distribution 
-            of rainfall, <strong>line charts</strong>that are used to track trends over time and
-            a <strong>dot plot</strong>that effectively visualises the frequency and magnitude of 
-            flood incidents. This multi-faceted approach allows for a comprehensive exploration of the data.
-          </p>
+    <div class="controls-and-map-row">
+      <div class="controls">
+        <label><strong>Year</strong></label><br>
+        <input id="year-slider" type="range" min="2001" max="2010" step="1" value="2001">
+        <div style="text-align:right;font-weight:bold;">
+          <span id="year-label">2001</span>
         </div>
-      <div id="map"></div>
-      
-      <!-- Map Controls (Positioned under the legend) -->
-      <div class="map-controls-container">
-          <div class="map-controls-group">
-              <div class="map-controls-item">
-                  <label><strong>Year:</strong></label><br>
-                  <input id="year-slider" type="range" min="2001" max="2010" step="1" value="2001">
-                  <div style="text-align:right;font-weight:bold;">
-                      <span id="year-label">2001</span>
-                  </div>
-              </div>
-              <div class="map-controls-item">
-                  <label><strong>State:</strong></label><br>
-                  <select id="state-select">
-                  </select>
-              </div>
-          </div>
+        <hr>
+        <label><strong>State</strong></label><br>
+        <select id="state-select">
+          <!-- Options will be dynamically loaded here -->
+        </select>
       </div>
+
+      <div id="map"></div>
     </div>
 
-    <div class="chart-row">
-        <div class="chart-wrapper">
-            <div id="annualRainfallLineChart"></div>
-            <div class="chart-comment">
-              <h2>Tracking the Tides: Annual Rainfall Trends Across States</h2>
-              <p>This line chart illustrates the average annual rainfall for each
-                Malaysian state from 2001 to 2010. Notice the significant volatility
-                from year to year, with some years like 2006 and
-                2008 showing distinct peaks in precipitation for several states.</p>
-              <p>
-                Rainfall surges often precede major flooding events. This happened around<br> 
-                2006-2008 in Pahang and Johor.
-              </p>
-            </div>
-        </div>
-
-        <div class="chart-wrapper">
-            <div id="floodIncidentsDotChart"></div>
-            <div class="chart-comment">
-              <h2>The Unavoidable Consequence: National Flood Incidents</h2>
-                <p>With heavy and variable rainfall comes the risk of floods.
-                  This dot plot shows the number of districts affected by 
-                  floods nationally each year. Each dot represents a state's flood
-                  count for that year. The size and color intensity of
-                  the dots correlate with the severity of the flooding. The 
-                  vertical stacking allows us to see the national picture clearly.
-                </p>
-              <p>The year <strong>2009 stands out with the highest number of
-                flood incidents</strong>, confirming that periods of intense rainfall have a
-                direct and immediate impact on communities across the country.
-              </p>
-            </div>
-        </div>
+    <!-- New divs for separate charts -->
+    <div class="chart-container">
+      <div id="annualRainfallLineChart"></div>
+      <div id="floodIncidentsDotChart"></div>
+      <div id="timberProductionLineChart"></div>
+      <div id="agricultureGdpLineChart"></div>
     </div>
-
-    <div class="chart-row">
-        <div class="chart-wrapper">
-            <div id="timberProductionLineChart"></div>
-            <div class="chart-comment">
-              <h2>Economic Ripples: The Impact on Timber Production</h2>
-                <p>Environmental events have profound economic consequences. The timber 
-                  industry, vital to Malaysia's economy, is particularly vulnerable to weather 
-                  disruptions. This chart tracks the production of four major timber products.<br> 
-                  A clear narrative emerges when comparing this data to the rainfall
-                  and flood patterns.
-                </p>
-                <p>Notice the significant <strong>drop in the production of Plywood and 
-                  Sawn Timber during 2007 and 2008</strong>. This dip coincides with 
-                  the period of heightened rainfall, suggesting that severe weather may
-                  disrupt logging and processing operations.</p>
-            </div>
-        </div>
-
-        <div class="chart-wrapper">
-            <div id="agricultureGdpLineChart"></div>
-            <div class="chart-comment">
-              <h2>The Bigger Picture: Agriculture, Forestry, and Fishing GDP</h2>
-                <p>To see the broader economic impact, we can look at 
-                  the total value added to Malaysia's GDP from the entire 
-                  Agriculture, Forestry, and Fishing sector. This chart provides a high-level 
-                  view of the sector's financial health, revealing trends that mirror 
-                  the challenges seen in the timber industry.
-                </p>
-                <p>The <strong>economic downturn in this sector during 2007 and 2008</strong> 
-                  aligns perfectly with the drop in timber production and the 
-                  period of intense rainfall, reinforcing the story that extreme climate 
-                  events have a measurable negative impact on Malaysia's primary industries.
-                </p>
-        </div>
-    </div>
-    <div style="height: 50px;"></div>
-
-    <footer>
-        <section class="narrative-section">
-            <h2>Conclusion</h2>
-            <p>The data from 2001 to 2010 tells a clear and compelling story: Malaysia's economic output in its primary industries is deeply intertwined with its climatic patterns. The years marked by higher rainfall and more severe flooding, particularly around 2007-2009, correspond to noticeable downturns in both timber production and the overall GDP from agriculture and forestry. This highlights the nation's economic vulnerability to environmental factors and underscores the importance of resilient infrastructure and planning.</p>
-        </section>
-
-        <section class="metadata-section">
-          <hr>
-          <p><strong>Author:</strong>Teo Ming Wei</p>
-          <p><strong>Date:</strong> 18 October 2025</p>
-          <p><strong>Data Sources:</strong></p>
-          <ul>
-            <li>Kaggle: Malaysia Flood Dataset (2000-2010) - <a href="https://www.kaggle.com/datasets/rajatjurel/malaysia-flood-dataset2000-2010?resource=download" target="_blank">Link</a></li>
-            <li>EM-DAT: The International Disaster Database - <a href="https://public.emdat.be/data" target="_blank">Link</a></li>
-            <li>Open DOSM: Production of Major Timber Products by State - <a href="https://open.dosm.gov.my/data-catalogue/timber_production" target="_blank">Link</a></li>
-            <li>The World Bank: Agriculture, Forestry, and Fishing, value added (% of GDP) - Malaysia:  - <a href="https://data.worldbank.org/indicator/NV.AGR.TOTL.ZS?locations=MY" target="_blank">Link</a></li>
-          </ul>
-          <p><strong>Tools Used:</strong> This visualisation is created using the Vega-Lite library, with layout and styling handled by HTML and CSS.</p>
-        </section>
-      </footer>
-
-  </div>
-  
   </div>
 
 <script>
@@ -375,8 +146,10 @@ function parseCSV(text) {
 
 let rainfallDensityData = [];
 let floodSummary = [];
+// timberProductionData no longer needed as an empty global array
 
 async function loadData() {
+  // --- Load Flood and Rainfall Data ---
   const csvText = await fetch('processed_flood_summary_by_state_year.csv').then(r => r.text());
   const parsedData = parseCSV(csvText);
 
@@ -393,8 +166,9 @@ async function loadData() {
     AverageAnnualRainfall: +r.Average_Annual_Rainfall
   }));
   
+  // Populate state-select dropdown
   const stateSelect = document.getElementById('state-select');
-  stateSelect.innerHTML = '';
+  stateSelect.innerHTML = ''; // Clear existing options
 
   const allStatesOption = document.createElement('option');
   allStatesOption.value = 'All States';
@@ -453,13 +227,18 @@ async function render() {
     AverageAnnualRainfall: d.AverageAnnualRainfall
   }));
 
+  // === MAP SPEC (Your existing code) ===
   const mapSpec = {
     "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
     "background": "white",
-    "width": 1800,
-    "height": 850,
+    "width": 1050,
+    "height": 650,
     "title": {
-      "text": "Average Annual Rainfall Density (mm/km²) in Malaysia (2001-2010)",
+      "text": "Average Annual Rainfall Density (mm/km²) in Malaysia (2000-2010)",
+      // "subtitle": [
+      //   "Rainfall measured in millimeters per square kilometer (mm/km²).",
+      //   "Source: Public Sector Open Data Portal (DTSA)."
+      // ],
       "fontSize": 34,
       "subtitleFontSize": 14,
       "subtitleFont": "Arial",
@@ -472,8 +251,8 @@ async function render() {
       "type": "conicConformal",
       "center": [109.5, 4],
       "parallels": [1, 7],
-      "scale": 5000,
-      "translate": [925, 525]
+      "scale": 3000,
+      "translate": [525, 325]
     },
     "layer": [
       {
@@ -541,8 +320,8 @@ async function render() {
               "titleLimit": 150,
               "labelLimit": 100,
               "format": ".2f",
-              "titleFontSize": 16,
-              "labelFontSize": 14
+              "titleFontSize": 14,
+              "labelFontSize": 12
             }
           },
           "stroke": {
@@ -601,7 +380,7 @@ async function render() {
             "as": "latitude"
           }
         ],
-        "mark": {"type": "point", "filled": true, "stroke": "black", "strokeWidth": 0.5, "opacity": 0.9, "color": "#7F3C8D"},
+        "mark": {"type": "point", "filled": true, "stroke": "black", "strokeWidth": 0.5, "opacity": 0.8, "color": "purple"},
         "encoding": {
           "longitude": {"field": "longitude", "type": "quantitative"},
           "latitude": {"field": "latitude", "type": "quantitative"},
@@ -609,11 +388,7 @@ async function render() {
             "field": "AnnualFloodCount",
             "type": "quantitative",
             "scale": {"range": [100, 1500]},
-            "legend": {
-              "title": "Flood Incidents",
-              "titleFontSize": 16,
-              "labelFontSize": 14,
-            }
+            "legend": {"title": "Flood Incidents"}
           },
           "tooltip": [
             {"field": "properties.NAME_1", "title": "State:"},
@@ -630,18 +405,21 @@ async function render() {
     }
   };
 
+  // === ANNUAL RAINFALL LINE CHART SPEC (Your existing code) ===
   const annualRainfallLineChartSpec = {
     "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
     "title": {
-      "text": "Average Annual Rainfall (mm) in Malaysia (2001-2010)",
-      "fontSize": 26,
+      "text": selectedState === 'All States'
+        ? `National Annual Average Rainfall (2000-2010)`
+        : `Annual Average Rainfall in ${selectedState} (2000-2010)`,
+      "subtitle": "Rainfall measured in millimeters (mm).",
+      "fontSize": 24,
       "subtitleFontSize": 12,
-      "subtitleFont": "Lonto",
-      "anchor": "start",
-      "offset": 15
+      "subtitleFont": "Arial",
+      "anchor": "start"
     },
-    "width": 935, 
-    "height": 500,
+    "width": 950,
+    "height": 350,
     "padding": {"left": 5, "right": 5, "top": 5, "bottom": 5},
     "data": {"values": lineValues},
     "mark": {"type":"line","point":true,"interpolate":"monotone"},
@@ -672,13 +450,14 @@ async function render() {
           "title":"State",
           "orient":"right",
           "offset": 10,
-          "titleFontSize": 18,
-          "labelFontSize": 16,
+          "titleFontSize": 16,
+          "labelFontSize": 14,
           "labelLimit": 200
         },
         "scale": {
-            "range": ["#0072B2", "#5F5F5F", "#56B4E9", "#F0E442", "#CC79A7", "#009E73", "#7F3C8D", "#999999", "#A0CBE8", "#FFB6C1", "#004F6F"] 
-        } 
+          // "scheme": "tableau10"
+          "range": ["#0072B2", "#5F5F5F", "#56B4E9", "#F0E442", "#CC79A7", "#009E73", "#E69F00", "#999999", "#A0CBE8", "#FFB6C1", "#004F6F"]
+        }
       },
       "tooltip":[
         {"field":"State", "title": "State:"},
@@ -693,18 +472,21 @@ async function render() {
     }
   };
 
+  // === ANNUAL FLOOD INCIDENTS DOT CHART SPEC (Your existing code) ===
   const floodIncidentsDotChartSpec = {
     "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
     "title": {
-      "text": "Annual Flood Incidents in Malaysia (2001 -2010)",
-      "fontSize": 26,
+      "text": selectedState === 'All States'
+        ? `National Annual Flood Incidents (2000-2010)`
+        : `Annual Flood Incidents in ${selectedState} (2000-2010)`,
+      "subtitle": "Number of districts affected by floods.",
+      "fontSize": 24,
       "subtitleFontSize": 12,
       "subtitleFont": "Arial",
-      "anchor": "start",
-      "offset": 15
+      "anchor": "start"
     },
-    "width": 925, 
-    "height": 500,
+    "width": 950,
+    "height": 350,
     "padding": {"left": 5, "right": 5, "top": 5, "bottom": 5},
     "data": {"values": lineValues},
     "mark": {
@@ -739,9 +521,9 @@ async function render() {
       "color": {
         "field": "AnnualFloodCount",
         "type": "quantitative",
-        "scale": {"scheme": "plasma", "type": "threshold", "domain": [1, 5, 10]}, 
+        "scale": {"range": ["#ffffcc", "#ffeda0", "#feb24c", "#fd8d3c", "#e31a1c", "#bd0026"], "type": "threshold", "domain": [1, 2, 5, 10, 15]},
         "title": "Districts Flooded",
-        "legend": {"orient": "right", "offset": 30, "titleFontSize": 18, "labelFontSize": 16}
+        "legend": {"orient": "right", "offset": 50, "titleFontSize": 14, "labelFontSize": 12}
       },
       "size": {
         "field": "AnnualFloodCount",
@@ -763,24 +545,25 @@ async function render() {
     }
   };
   
+  // === TIMBER PRODUCTION LINE CHART SPEC (LINEAR SCALE, MILLIONS OF TONNES) ===
   const timberProductionLineChartSpec = {
     "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
     "title": {
-        "text": "Malaysia Timber Production by Product (2001-2010)",
-        // "subtitle": "Production measured in Millions of Tonnes.",
-        "fontSize": 26,
+        "text": "Malaysia Timber Production by Product (2000-2010)",
+        "subtitle": "Production measured in Millions of Tonnes.",
+        "fontSize": 24,
         "subtitleFontSize": 12,
         "subtitleFont": "Arial",
-        "anchor": "start",
-        "offset": 15
+        "anchor": "start"
     },
-    "width": 980, 
-    "height": 500, 
+    "width": 950,
+    "height": 450, 
     "data": {
-        "url": "processed_timber_production_national.csv"
+        "url": "processed_timber_production_national.csv" // Direct file path
     },
     "transform": [
-        {"filter": "datum.YEAR >= 2000 && datum.YEAR <= 2010"},
+        {"filter": "datum.YEAR >= 2000 && datum.YEAR <= 2010"}, // Filter data
+        // Calculate a new field for production in millions of tonnes
         {"calculate": "datum.Total_Production / 1000000", "as": "Production_Millions"} 
     ],
     "mark": {"type": "line", "point": true},
@@ -788,78 +571,65 @@ async function render() {
         "x": {
             "field": "YEAR",
             "type": "ordinal",
-            "axis": {
-              "title": "Year",
-              "titleFontSize": 18,
-              "labelFontSize": 16
-            }
+            "axis": {"title": "Year"}
         },
         "y": {
             "field": "Production_Millions",
             "type": "quantitative",
             "title": "Total Production (Million Tonnes)",
             "axis": {
-              "format": ".2f",
-              "titleFontSize": 18,
-              "labelFontSize": 16
-            },
-            "scale": {
-              "domainMax": 6.0
-            }
+              "format": ".2f"}
         },
         "color": {
             "field": "product",
             "type": "nominal",
             "title": "Product Type",
-            "legend": {"orient": "right", "offset": 10, "titleFontSize": 18, "labelFontSize": 16},
+            "legend": {"orient": "right", "offset": 10},
             "scale": {
-              "range": ["#4477AA", "#66CCEE", "#228833", "#CCBB44", "#EE6677", "#AA3377"],
+              // "scheme": "dark2"
+              "range": ["#4477AA", "#66CCEE", "#228833", "#CCBB44"]
             }
         },
         "tooltip": [
             {"field": "YEAR", "title": "Year:", "type": "ordinal"},
             {"field": "product", "title": "Product", "type": "nominal"},
+            // Show the original large number in the tooltip for precision
             {"field": "Total_Production", "type": "quantitative", "title": "Production (Tonnes)", "format": ","} 
         ]
     }
   };
 
+  // === NEW AGRICULTURE GDP LINE CHART SPEC ===
   const agricultureGdpLineChartSpec = {
     "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
     "title": {
-        "text": "Sum of Agriculture, Forestry and Fishing GDP Trend in Malaysia (2001-2010)",
-        "fontSize": 26,
+        "text": "Sum of Malaysia Agriculture, Forestry and Fishing GDP Trend (2001-2010)",
+        // "subtitle": "Agriculture, forestry, and fishing value added (% of GDP).",
+        "fontSize": 24,
         "subtitleFontSize": 12,
         "subtitleFont": "Arial",
-        "anchor": "start",
-        "offset": 15
+        "anchor": "start"
     },
-    "width": 1065, 
-    "height": 500,
+    "width": 950,
+    "height": 450,
     "data": {
-        "url": "gdp.csv"
+        "url": "gdp.csv" // Direct file path to your GDP data
     },
-    "mark": {"type": "line", "point": true, "color": "#7F3C8D"},
+    "mark": {"type": "line", "point": true, "color": "purple"},
     "encoding": {
         "x": {
             "field": "Year",
             "type": "ordinal",
-            "axis": {
-              "title": "Year",
-              "titleFontSize": 18,
-              "labelFontSize": 16
-            }
+            "axis": {"title": "Year"}
         },
         "y": {
             "field": "GDP",
             "type": "quantitative",
-            "title": "Sum (% of GDP)",
+            "title": "Value Added (% of GDP)",
             "axis": {
               "format": ".2f",
-              "titleFontSize": 18,
-              "labelFontSize": 16,
-              "tickCount": 6,  
-                "values": [2, 4, 6, 8, 10] 
+              "tickCount": 6,  // Suggest 6 ticks for a 0-12 scale (0, 2, 4, 6, 8, 10, 12)
+                "values": [2, 4, 6, 8, 10] // Explicitly set ticks at 2.0 intervals (adjust this array if needed)
             }, 
         },
         "tooltip": [
@@ -869,11 +639,12 @@ async function render() {
     }
   };
 
+
   await vegaEmbed('#map', mapSpec, {actions:false, renderer: 'svg'});
   await vegaEmbed('#annualRainfallLineChart', annualRainfallLineChartSpec, {actions:false, renderer: 'svg'});
   await vegaEmbed('#floodIncidentsDotChart', floodIncidentsDotChartSpec, {actions:false, renderer: 'svg'});
   await vegaEmbed('#timberProductionLineChart', timberProductionLineChartSpec, {actions:false, renderer: 'svg'});
-  await vegaEmbed('#agricultureGdpLineChart', agricultureGdpLineChartSpec, {actions:false, renderer: 'svg'});
+  await vegaEmbed('#agricultureGdpLineChart', agricultureGdpLineChartSpec, {actions:false, renderer: 'svg'}); // Embed the new chart
 }
 
 (async function(){
