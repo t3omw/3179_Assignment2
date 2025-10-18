@@ -22,7 +22,7 @@
         margin: 20px auto;
         padding: 20px;
         box-shadow: 0 0 10px rgba(0,0,0,0.1);
-        height: 4000px;
+        height: auto;
     }
 
     h1 {
@@ -31,6 +31,12 @@
       margin-bottom: 50px;
       font-size: 70px;
       font-family: Palatino Linotype, serif;
+    }
+
+    h2 {
+      text-align: left;
+      font-size: 24px;
+      font-weight: bold;
     }
 
     .main-content-wrapper {
@@ -54,6 +60,20 @@
       height: 650px;
       background: #fff;
       border-radius: 8px;
+    }
+
+    .map-intro-overlay {
+      position: absolute;
+      top: 50px;
+      left: 30px;
+      z-index: 10; /* Ensure it's on top of the map */
+      max-width: 600px;
+
+      background-color: transparent;
+      color: #949494; /* <-- This controls the font COLOR */
+      /* font-size: 1.0em; */
+      font-size: 14px;
+      line-height: 1.2;
     }
     
     .map-controls-container {
@@ -85,7 +105,7 @@
         align-items: left;
         width: 100%;
         max-width: 2000px;
-        gap: 150px;
+        gap: 160px;
     }
 
     .chart-wrapper {
@@ -95,7 +115,7 @@
         width: 100%; 
         max-width: 1800px;
         align-items: left;
-        gap: 500px;
+        gap: 530px;
     }
 
   
@@ -119,25 +139,14 @@
         padding: 15px; 
         border-radius: 8px;
         background: #fff;
-        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        /* box-shadow: 0 2px 5px rgba(0,0,0,0.1); */
         font-size: 20px;
         text-align: left;
-        margin-top: 60px;
+        margin-top: 52px;
         margin-left: 90px;
     }
 
-    #agricultureGdpLineChart .chart-comment {
-        min-width: 700px;
-        padding: 15px; 
-        border-radius: 8px;
-        background: #fff;
-        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-        font-size: 20px;
-        text-align: left;
-        margin-top: 60px;
-        margin-left: 90px;
-    }
-
+  
     input[type=range] {
       width: 100%;
       margin-bottom: 5px;
@@ -150,18 +159,90 @@
       border: 1px solid #ccc;
       border-radius: 4px;
     }
+
+    .narrative-section h2 {
+      font-size: 32px;
+      margin-bottom: -15px;
+    }
+
+    .narrative-section {
+      font-size: 28px;
+      text-align: left;
+      margin-left: 50px;
+      margin-top: -180px;
+      width: 100%;
+      min-width: 1900px;
+      margin-bottom: -40px;
+    }
+
+    footer hr {
+      border: none;
+      border-top: 1px solid #ddd;
+      margin-top: 80px;
+      margin-bottom: 30px;
+    }
+
+    .metadata-section {
+      width: 100%;
+      min-width: 2000px;
+      font-size: 16px;
+      color: #555;
+      line-height: 1.5;
+    }
+
+    .metadata-section p,
+    .metadata-section ul {
+    margin-bottom: 20px;
+    margin-left: 50px;
+    margin-top: -5px;
+    }
+
+    .metadata-section ul {
+        list-style-position: inside;
+        padding-left: 0;
+    }
   </style>
 </head>
 <body>
   
   <div class="large-white-container">
   
-  <h1>Annual Rainfall Malaysia (2001-2010)</h1>
-
+  <h1>Rains & Resilience: Malaysia's Climate and its Economic Echoes (2001-2010)</h1>
+  
   <div class="main-content-wrapper">
 
     <!-- Map with Controls -->
     <div class="map-wrapper">
+        <div class="map-intro-overlay">
+          <p>
+            Malaysia's tropical climate is central to its identity and economy,
+            but the annual monsoons also bring the significant threat of
+            flooding. This visualisation explores the intricate relationship between rainfall patterns,
+            the resulting flood incidents, and the tangible impacts on key
+            Malaysian economic sectors like timber and agriculture over a decade.
+          </p>
+          <!-- <p>
+          This visualisation show links between environmental events and their economic
+          consequences for anyone interested in Malaysia's economy and climate as
+          it transforms publicly available datasets on rainfall, floods, timber production, and GDP
+          to reveal insights of Southeast Asian economics.
+          </p> -->
+          <p>
+            This visualisation shows the connection between environmental events (heavy rainfall) 
+            and their social and economic consequences (flooding and impacts on primary industries) 
+            in Malaysia. It aims to provide insight into the vulnerability of these sectors using 
+            publicly available datasets and transform them into climate patterns for individuals 
+            interested in Southeast Asian economics and climate science such as the average Malaysian, 
+            including students and policymakers. No specialised statistical knowledge is required.
+          </p>
+          <p>
+            The visualisation uses a range of carefully selected charts (idioms) to reveal insights
+            which includes a <strong>choropleth map</strong>that shows the geographic distribution 
+            of rainfall, <strong>line charts</strong>that are used to track trends over time and
+            a <strong>dot plot</strong>that effectively visualises the frequency and magnitude of 
+            flood incidents. This multi-faceted approach allows for a comprehensive exploration of the data.
+          </p>
+        </div>
       <div id="map"></div>
       
       <!-- Map Controls (Positioned under the legend) -->
@@ -187,14 +268,33 @@
         <div class="chart-wrapper">
             <div id="annualRainfallLineChart"></div>
             <div class="chart-comment">
-                <p>Sudden surge of rainfall at 2019</p>
+              <h2>Tracking the Tides: Annual Rainfall Trends Across States</h2>
+              <p>This line chart illustrates the average annual rainfall for each
+                Malaysian state from 2001 to 2010. Notice the significant volatility
+                from year to year, with some years like 2006 and
+                2008 showing distinct peaks in precipitation for several states.</p>
+              <p>
+                Rainfall surges often precede major flooding events. This happened around<br> 
+                2006-2008 in Pahang and Johor.
+              </p>
             </div>
         </div>
 
         <div class="chart-wrapper">
             <div id="floodIncidentsDotChart"></div>
             <div class="chart-comment">
-                <p>2009 have the highest amount of flood incidents</p>
+              <h2>The Unavoidable Consequence: National Flood Incidents</h2>
+                <p>With heavy and variable rainfall comes the risk of floods.
+                  This dot plot shows the number of districts affected by 
+                  floods nationally each year. Each dot represents a state's flood
+                  count for that year. The size and color intensity of
+                  the dots correlate with the severity of the flooding. The 
+                  vertical stacking allows us to see the national picture clearly.
+                </p>
+              <p>The year <strong>2009 stands out with the highest number of
+                flood incidents</strong>, confirming that periods of intense rainfall have a
+                direct and immediate impact on communities across the country.
+              </p>
             </div>
         </div>
     </div>
@@ -203,18 +303,60 @@
         <div class="chart-wrapper">
             <div id="timberProductionLineChart"></div>
             <div class="chart-comment">
-                <p>Drop in timber production in 2007 and 2008 except Veneer</p>
+              <h2>Economic Ripples: The Impact on Timber Production</h2>
+                <p>Environmental events have profound economic consequences. The timber 
+                  industry, vital to Malaysia's economy, is particularly vulnerable to weather 
+                  disruptions. This chart tracks the production of four major timber products.<br> 
+                  A clear narrative emerges when comparing this data to the rainfall
+                  and flood patterns.
+                </p>
+                <p>Notice the significant <strong>drop in the production of Plywood and 
+                  Sawn Timber during 2007 and 2008</strong>. This dip coincides with 
+                  the period of heightened rainfall, suggesting that severe weather may
+                  disrupt logging and processing operations.</p>
             </div>
         </div>
 
         <div class="chart-wrapper">
             <div id="agricultureGdpLineChart"></div>
             <div class="chart-comment">
-                <p>Drop in GDP during 2007 and 2008</p>
-            </div>
+              <h2>The Bigger Picture: Agriculture, Forestry, and Fishing GDP</h2>
+                <p>To see the broader economic impact, we can look at 
+                  the total value added to Malaysia's GDP from the entire 
+                  Agriculture, Forestry, and Fishing sector. This chart provides a high-level 
+                  view of the sector's financial health, revealing trends that mirror 
+                  the challenges seen in the timber industry.
+                </p>
+                <p>The <strong>economic downturn in this sector during 2007 and 2008</strong> 
+                  aligns perfectly with the drop in timber production and the 
+                  period of intense rainfall, reinforcing the story that extreme climate 
+                  events have a measurable negative impact on Malaysia's primary industries.
+                </p>
         </div>
     </div>
     <div style="height: 50px;"></div>
+
+    <footer>
+        <section class="narrative-section">
+            <h2>Conclusion</h2>
+            <p>The data from 2001 to 2010 tells a clear and compelling story: Malaysia's economic output in its primary industries is deeply intertwined with its climatic patterns. The years marked by higher rainfall and more severe flooding, particularly around 2007-2009, correspond to noticeable downturns in both timber production and the overall GDP from agriculture and forestry. This highlights the nation's economic vulnerability to environmental factors and underscores the importance of resilient infrastructure and planning.</p>
+        </section>
+
+        <section class="metadata-section">
+          <hr>
+          <p><strong>Author:</strong>Teo Ming Wei</p>
+          <p><strong>Date:</strong> 18 October 2025</p>
+          <p><strong>Data Sources:</strong></p>
+          <ul>
+            <li>Kaggle: Malaysia Flood Dataset (2000-2010) - <a href="https://www.kaggle.com/datasets/rajatjurel/malaysia-flood-dataset2000-2010?resource=download" target="_blank">Link</a></li>
+            <li>EM-DAT: The International Disaster Database - <a href="https://public.emdat.be/data" target="_blank">Link</a></li>
+            <li>Open DOSM: Production of Major Timber Products by State - <a href="https://open.dosm.gov.my/data-catalogue/timber_production" target="_blank">Link</a></li>
+            <li>The World Bank: Agriculture, Forestry, and Fishing, value added (% of GDP) - Malaysia:  - <a href="https://data.worldbank.org/indicator/NV.AGR.TOTL.ZS?locations=MY" target="_blank">Link</a></li>
+          </ul>
+          <p><strong>Tools Used:</strong> This visualisation is created using the Vega-Lite library, with layout and styling handled by HTML and CSS.</p>
+        </section>
+      </footer>
+
   </div>
   
   </div>
@@ -495,7 +637,8 @@ async function render() {
       "fontSize": 26,
       "subtitleFontSize": 12,
       "subtitleFont": "Lonto",
-      "anchor": "start"
+      "anchor": "start",
+      "offset": 15
     },
     "width": 935, 
     "height": 500,
@@ -553,11 +696,12 @@ async function render() {
   const floodIncidentsDotChartSpec = {
     "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
     "title": {
-      "text": "Annual Flood Incidents in Malaysia",
+      "text": "Annual Flood Incidents in Malaysia (2001 -2010)",
       "fontSize": 26,
       "subtitleFontSize": 12,
       "subtitleFont": "Arial",
-      "anchor": "start"
+      "anchor": "start",
+      "offset": 15
     },
     "width": 925, 
     "height": 500,
@@ -622,12 +766,13 @@ async function render() {
   const timberProductionLineChartSpec = {
     "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
     "title": {
-        "text": "Malaysia Timber Production by Product (2000-2010)",
+        "text": "Malaysia Timber Production by Product (2001-2010)",
         // "subtitle": "Production measured in Millions of Tonnes.",
         "fontSize": 26,
         "subtitleFontSize": 12,
         "subtitleFont": "Arial",
-        "anchor": "start"
+        "anchor": "start",
+        "offset": 15
     },
     "width": 980, 
     "height": 500, 
@@ -657,6 +802,9 @@ async function render() {
               "format": ".2f",
               "titleFontSize": 18,
               "labelFontSize": 16
+            },
+            "scale": {
+              "domainMax": 6.0
             }
         },
         "color": {
@@ -665,7 +813,7 @@ async function render() {
             "title": "Product Type",
             "legend": {"orient": "right", "offset": 10, "titleFontSize": 18, "labelFontSize": 16},
             "scale": {
-              "range": ["#4477AA", "#66CCEE", "#228833", "#CCBB44", "#EE6677", "#AA3377"]
+              "range": ["#4477AA", "#66CCEE", "#228833", "#CCBB44", "#EE6677", "#AA3377"],
             }
         },
         "tooltip": [
@@ -683,7 +831,8 @@ async function render() {
         "fontSize": 26,
         "subtitleFontSize": 12,
         "subtitleFont": "Arial",
-        "anchor": "start"
+        "anchor": "start",
+        "offset": 15
     },
     "width": 1065, 
     "height": 500,
@@ -704,7 +853,7 @@ async function render() {
         "y": {
             "field": "GDP",
             "type": "quantitative",
-            "title": "Value Added (% of GDP)",
+            "title": "Sum (% of GDP)",
             "axis": {
               "format": ".2f",
               "titleFontSize": 18,
