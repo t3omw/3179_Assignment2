@@ -409,8 +409,13 @@ async function loadData() {
   allStatesOption.textContent = 'All States';
   stateSelect.appendChild(allStatesOption);
 
-  const uniqueStates = [...new Set(floodSummary.map(r => r.State))].sort();
-  uniqueStates.forEach(state => {
+  const all_states_list = [
+    'Johor', 'Kedah', 'Kelantan', 'Kuala Lumpur', 'Labuan', 'Melaka',
+    'Negeri Sembilan', 'Pahang', 'Perak', 'Perlis', 'Pulau Pinang',
+    'Putrajaya', 'Sabah', 'Sarawak', 'Selangor', 'Terengganu'
+  ];
+
+  all_states_list.sort().forEach(state => {
     const option = document.createElement('option');
     option.value = state;
     option.textContent = state;
@@ -507,6 +512,7 @@ async function render() {
           "strokeDash": [2, 2]
         }
       },
+      // Base layer for highlighting and default color
       {
         "data": {
           "url": "malaysia_state.json",
@@ -515,15 +521,33 @@ async function render() {
         "mark": {
           "type": "geoshape",
           "fill": "#cccccc",
-          "stroke": "white",
-          "strokeWidth": 0.5
+          "stroke": "white"
         },
         "encoding": {
-            "tooltip":[
-                {"field":"properties.NAME_1","title":"State/Territory:"}
-            ]
+            "stroke": {
+              "condition": {
+                "test": selectedState === 'All States' ? "false" : `datum.properties.NAME_1 === '${selectedState}'`,
+                "value": "black"
+              },
+              "value": "white"
+            },
+            "strokeWidth": {
+              "condition": {
+                "test": selectedState === 'All States' ? "false" : `datum.properties.NAME_1 === '${selectedState}'`,
+                "value": 2
+              },
+              "value": 0.5
+            },
+            "opacity": {
+              "condition": {
+                "test": selectedState === 'All States' ? "true" : `datum.properties.NAME_1 === '${selectedState}'`,
+                "value": 1
+              },
+              "value": 0.4
+            }
         }
       },
+      // Data overlay for choropleth color
       {
         "data": {
           "url": "malaysia_state.json",
@@ -536,7 +560,7 @@ async function render() {
           },
           {"calculate": "isValid(datum.rainfall) ? datum.rainfall : null", "as": "rainfall_data"}
         ],
-        "mark":{"type":"geoshape","stroke":"white"},
+        "mark":{"type":"geoshape"},
         "encoding":{
           "color":{
             "field":"rainfall_data",
@@ -553,33 +577,42 @@ async function render() {
               "labelFontSize": 14
             }
           },
-          "stroke": {
-            "condition": {
-              "test": selectedState === 'All States' ? "false" : `datum.properties.NAME_1 === '${selectedState}'`,
-              "value": "black"
-            },
-            "value": "white"
-          },
-          "strokeWidth": {
-            "condition": {
-              "test": selectedState === 'All States' ? "false" : `datum.properties.NAME_1 === '${selectedState}'`,
-              "value": 2
-            },
-            "value": 0.5
-          },
-          "opacity":{
-            "condition":{
-              "test": selectedState === 'All States' ? "true" : `datum.properties.NAME_1 === '${selectedState}'`,
-              "value":1
-            },
-            "value":0.4
-          },
-          "tooltip":[
-            {"field":"properties.NAME_1","title":"State:"},
-            {"field":"rainfall_data","title":"Rainfall Density (mm/km²):","format":".2f"}
-          ]
+          "opacity": {
+              "condition": {
+                "test": selectedState === 'All States' ? "true" : `datum.properties.NAME_1 === '${selectedState}'`,
+                "value": 1
+              },
+              "value": 0.4
+            }
         }
       },
+      // **MODIFICATION**: Invisible layer for handling conditional tooltips
+      {
+        "data": {
+            "url": "malaysia_state.json",
+            "format": {"type": "topojson", "feature": "malaysia_state"}
+        },
+        "transform":[
+            {
+                "lookup": "properties.NAME_1",
+                "from": {"data": {"values": choroplethData}, "key": "State", "fields": ["rainfall"]}
+            },
+            // Use calculate to create a display-ready string
+            {"calculate": "isValid(datum.rainfall) ? format(datum.rainfall, '.2f') : 'No data is recorded'", "as": "display_rainfall"}
+        ],
+        "mark": {
+            "type": "geoshape",
+            "fill": "transparent",
+            "stroke": "transparent"
+        },
+        "encoding": {
+            "tooltip": [
+                {"field": "properties.NAME_1", "title": "State:"},
+                {"field": "display_rainfall", "title": "Rainfall Density (mm/km²):"}
+            ]
+        }
+      },
+      // Centroid points layer (must be last to be on top)
       {
         "data": {
           "url": "malaysia_state_with_centroid.json",

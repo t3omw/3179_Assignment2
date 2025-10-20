@@ -228,15 +228,15 @@
           to reveal insights of Southeast Asian economics.
           </p> -->
           <p>
-            This visualisation shows the connection between environmental events (heavy rainfall) 
+            Moreover, it shows the connection between environmental events (heavy rainfall) 
             and their social and economic consequences (flooding and impacts on primary industries) 
-            in Malaysia. It aims to provide insight into the vulnerability of these sectors using 
+            in Malaysia. It also aims to provide insight into the vulnerability of these sectors using 
             publicly available datasets and transform them into climate patterns for individuals 
             interested in Southeast Asian economics and climate science such as the average Malaysian, 
             including students and policymakers. No specialised statistical knowledge is required.
           </p>
           <p>
-            The visualisation uses a range of carefully selected charts (idioms) to reveal insights
+            Additionally, it uses a range of carefully selected charts (idioms) to reveal insights
             which includes a <strong>choropleth map</strong>that shows the geographic distribution 
             of rainfall, <strong>line charts</strong>that are used to track trends over time and
             a <strong>dot plot</strong>that effectively visualises the frequency and magnitude of 
@@ -275,7 +275,7 @@
                 2008 showing distinct peaks in precipitation for several states.</p>
               <p>
                 Rainfall surges often precede major flooding events. This happened around<br> 
-                2006-2008 in Pahang and Johor.
+                2006-2008 in Pulau Pinang and Johor.
               </p>
             </div>
         </div>
@@ -339,7 +339,15 @@
     <footer>
         <section class="narrative-section">
             <h2>Conclusion</h2>
-            <p>The data from 2001 to 2010 tells a clear and compelling story: Malaysia's economic output in its primary industries is deeply intertwined with its climatic patterns. The years marked by higher rainfall and more severe flooding, particularly around 2007-2009, correspond to noticeable downturns in both timber production and the overall GDP from agriculture and forestry. This highlights the nation's economic vulnerability to environmental factors and underscores the importance of resilient infrastructure and planning.</p>
+            <p>The data from 2001 to 2010 tells a clear and compelling story: 
+              Malaysia's economic output in its primary industries is deeply intertwined 
+              with its climatic patterns. The years marked by higher rainfall and more 
+              severe flooding, particularly around 2007-2009, correspond to noticeable 
+              downturns in both timber production and the overall GDP from agriculture 
+              and forestry. This highlights the nation's economic vulnerability to 
+              environmental factors and underscores the importance of resilient 
+              infrastructure and planning.
+            </p>
         </section>
 
         <section class="metadata-section">
@@ -401,8 +409,14 @@ async function loadData() {
   allStatesOption.textContent = 'All States';
   stateSelect.appendChild(allStatesOption);
 
-  const uniqueStates = [...new Set(floodSummary.map(r => r.State))].sort();
-  uniqueStates.forEach(state => {
+  // **FIX**: Using the full list of states to populate the dropdown.
+  const all_states_list = [
+    'Johor', 'Kedah', 'Kelantan', 'Kuala Lumpur', 'Labuan', 'Melaka',
+    'Negeri Sembilan', 'Pahang', 'Perak', 'Perlis', 'Pulau Pinang',
+    'Putrajaya', 'Sabah', 'Sarawak', 'Selangor', 'Terengganu'
+  ];
+
+  all_states_list.sort().forEach(state => {
     const option = document.createElement('option');
     option.value = state;
     option.textContent = state;
@@ -499,6 +513,7 @@ async function render() {
           "strokeDash": [2, 2]
         }
       },
+       // **FIX**: Base layer for all states, handling highlighting and fading.
       {
         "data": {
           "url": "malaysia_state.json",
@@ -506,16 +521,38 @@ async function render() {
         },
         "mark": {
           "type": "geoshape",
-          "fill": "#cccccc",
-          "stroke": "white",
-          "strokeWidth": 0.5
+          "fill": "#cccccc", // Default grey for states without data
+          "stroke": "white"
         },
         "encoding": {
+            "stroke": {
+              "condition": {
+                // This JS ternary creates a valid Vega expression string
+                "test": selectedState === 'All States' ? "false" : `datum.properties.NAME_1 === '${selectedState}'`,
+                "value": "black"
+              },
+              "value": "white"
+            },
+            "strokeWidth": {
+              "condition": {
+                "test": selectedState === 'All States' ? "false" : `datum.properties.NAME_1 === '${selectedState}'`,
+                "value": 2
+              },
+              "value": 0.5
+            },
+            "opacity": {
+              "condition": {
+                "test": selectedState === 'All States' ? "true" : `datum.properties.NAME_1 === '${selectedState}'`,
+                "value": 1
+              },
+              "value": 0.4 // Faded value for unselected states
+            },
             "tooltip":[
                 {"field":"properties.NAME_1","title":"State/Territory:"}
             ]
         }
       },
+      // **FIX**: Data layer, overlays color on states with data.
       {
         "data": {
           "url": "malaysia_state.json",
@@ -528,7 +565,7 @@ async function render() {
           },
           {"calculate": "isValid(datum.rainfall) ? datum.rainfall : null", "as": "rainfall_data"}
         ],
-        "mark":{"type":"geoshape","stroke":"white"},
+        "mark":{"type":"geoshape"},
         "encoding":{
           "color":{
             "field":"rainfall_data",
@@ -545,27 +582,13 @@ async function render() {
               "labelFontSize": 14
             }
           },
-          "stroke": {
-            "condition": {
-              "test": selectedState === 'All States' ? "false" : `datum.properties.NAME_1 === '${selectedState}'`,
-              "value": "black"
+          "opacity": {
+              "condition": {
+                "test": selectedState === 'All States' ? "true" : `datum.properties.NAME_1 === '${selectedState}'`,
+                "value": 1
+              },
+              "value": 0.4 // Also fade this layer
             },
-            "value": "white"
-          },
-          "strokeWidth": {
-            "condition": {
-              "test": selectedState === 'All States' ? "false" : `datum.properties.NAME_1 === '${selectedState}'`,
-              "value": 2
-            },
-            "value": 0.5
-          },
-          "opacity":{
-            "condition":{
-              "test": selectedState === 'All States' ? "true" : `datum.properties.NAME_1 === '${selectedState}'`,
-              "value":1
-            },
-            "value":0.4
-          },
           "tooltip":[
             {"field":"properties.NAME_1","title":"State:"},
             {"field":"rainfall_data","title":"Rainfall Density (mm/km²):","format":".2f"}
@@ -633,7 +656,7 @@ async function render() {
   const annualRainfallLineChartSpec = {
     "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
     "title": {
-      "text": "Average Annual Rainfall (mm) in Malaysia (2001-2010)",
+      "text": "State-Level Rainfall Patterns (2001-2010)",
       "fontSize": 26,
       "subtitleFontSize": 12,
       "subtitleFont": "Lonto",
@@ -696,7 +719,7 @@ async function render() {
   const floodIncidentsDotChartSpec = {
     "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
     "title": {
-      "text": "Annual Flood Incidents in Malaysia (2001 -2010)",
+      "text": "Frequency and Severity of Flooding (2001 -2010)",
       "fontSize": 26,
       "subtitleFontSize": 12,
       "subtitleFont": "Arial",
@@ -766,7 +789,7 @@ async function render() {
   const timberProductionLineChartSpec = {
     "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
     "title": {
-        "text": "Malaysia Timber Production by Product (2001-2010)",
+        "text": "Timber Sector Performance (2001-2010)",
         // "subtitle": "Production measured in Millions of Tonnes.",
         "fontSize": 26,
         "subtitleFontSize": 12,
@@ -827,7 +850,7 @@ async function render() {
   const agricultureGdpLineChartSpec = {
     "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
     "title": {
-        "text": "Sum of Agriculture, Forestry and Fishing GDP Trend in Malaysia (2001-2010)",
+        "text": "GDP Trend: Agriculture, Forestry and Fishing (2001-2010)",
         "fontSize": 26,
         "subtitleFontSize": 12,
         "subtitleFont": "Arial",
@@ -853,7 +876,7 @@ async function render() {
         "y": {
             "field": "GDP",
             "type": "quantitative",
-            "title": "Sum (% of GDP)",
+            "title": "Sum of GDP (%)",
             "axis": {
               "format": ".2f",
               "titleFontSize": 18,
