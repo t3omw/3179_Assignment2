@@ -423,6 +423,7 @@ async function loadData() {
   });
 }
 
+// filter for map
 function getMapValues(year) {
   const choroplethData = rainfallDensityData.filter(r => r.Year === year)
                 .map(r => ({ State: r.State, rainfall: r.RainfallPerKm2 }));
@@ -432,6 +433,7 @@ function getMapValues(year) {
   return { choroplethData, floodDotData };
 }
 
+// filter for line chart
 function getLineValues(state) {
   if (state !== 'All States') {
     return floodSummary.filter(r => r.State === state);
@@ -439,6 +441,7 @@ function getLineValues(state) {
   return floodSummary;
 }
 
+// redraw all charts based on user's selection for year and state
 async function render() {
   const year = +document.getElementById('year-slider').value;
   const selectedState = document.getElementById('state-select').value;
@@ -525,12 +528,14 @@ async function render() {
         },
         "encoding": {
             "stroke": {
+              // stroke becomes black if there is a selected state, else white
               "condition": {
                 "test": selectedState === 'All States' ? "false" : `datum.properties.NAME_1 === '${selectedState}'`,
                 "value": "black"
               },
               "value": "white"
             },
+            //stroke width becomes 2 if there is a selected state, else 0.5
             "strokeWidth": {
               "condition": {
                 "test": selectedState === 'All States' ? "false" : `datum.properties.NAME_1 === '${selectedState}'`,
@@ -538,6 +543,7 @@ async function render() {
               },
               "value": 0.5
             },
+            //fully opaque(not transparent) if there is a selected state, else default transparent
             "opacity": {
               "condition": {
                 "test": selectedState === 'All States' ? "true" : `datum.properties.NAME_1 === '${selectedState}'`,
@@ -586,7 +592,7 @@ async function render() {
             }
         }
       },
-      // **MODIFICATION**: Invisible layer for handling conditional tooltips
+      //Invisible layer for handling conditional tooltips
       {
         "data": {
             "url": "malaysia_state.json",
@@ -685,6 +691,7 @@ async function render() {
     "height": 500,
     "padding": {"left": 5, "right": 5, "top": 5, "bottom": 5},
     "data": {"values": lineValues},
+    // curved lines
     "mark": {"type":"line","point":true,"interpolate":"monotone"},
     "encoding":{
       "x":{
@@ -704,6 +711,7 @@ async function render() {
           "titleFontSize": 18,
           "labelFontSize": 16
         },
+        // add 10% to the max value of y-axis
         "scale": {"domainMax": maxAnnualRainfallLine * 1.1}
       },
       "color":{
