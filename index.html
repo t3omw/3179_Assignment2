@@ -384,13 +384,15 @@ function parseCSV(text) {
 let rainfallDensityData = [];
 let floodSummary = [];
 
+//fetch data from csv file
 async function loadData() {
   const csvText = await fetch('processed_flood_summary_by_state_year.csv').then(r => r.text());
   const parsedData = parseCSV(csvText);
 
-  rainfallDensityData = parsedData.map(r => ({
+  //processed parsed data to create new array
+  rainfallDensityData = parsedData.map(r => ({ //iterates row and create new object
     State: r['State Name'],
-    Year: +r.YEAR,
+    Year: +r.YEAR, //convert year from string to number
     RainfallPerKm2: +r.Annual_Density_mm_per_km2
   }));
 
@@ -401,9 +403,11 @@ async function loadData() {
     AverageAnnualRainfall: +r.Average_Annual_Rainfall
   }));
   
+  //creates drop down menu
   const stateSelect = document.getElementById('state-select');
-  stateSelect.innerHTML = '';
+  stateSelect.innerHTML = ''; //clears exiting options from drop down menu
 
+  //add all states option
   const allStatesOption = document.createElement('option');
   allStatesOption.value = 'All States';
   allStatesOption.textContent = 'All States';
@@ -415,6 +419,7 @@ async function loadData() {
     'Putrajaya', 'Sabah', 'Sarawak', 'Selangor', 'Terengganu'
   ];
 
+  //add list of states
   all_states_list.sort().forEach(state => {
     const option = document.createElement('option');
     option.value = state;
@@ -425,9 +430,11 @@ async function loadData() {
 
 // filter for map
 function getMapValues(year) {
+  //create new array to contain objects where Year property mactches the specific year
   const choroplethData = rainfallDensityData.filter(r => r.Year === year)
                 .map(r => ({ State: r.State, rainfall: r.RainfallPerKm2 }));
   
+  //extract flood incident records for the specific year to draw dots
   const floodDotData = floodSummary.filter(r => r.Year === year);
   
   return { choroplethData, floodDotData };
@@ -443,14 +450,20 @@ function getLineValues(state) {
 
 // redraw all charts based on user's selection for year and state
 async function render() {
+  //reads current value from year slider
   const year = +document.getElementById('year-slider').value;
+  //read current selected state from drop down menu
   const selectedState = document.getElementById('state-select').value;
+  //updates text label to show selected year
   document.getElementById('year-label').textContent = year;
 
+  //get filtered data for the selected year
   const { choroplethData, floodDotData } = getMapValues(year);
   
+  //get filtered data for selected state
   const lineValues = getLineValues(selectedState);
 
+  //find highest numerical value for a specific field in a dataset to set chart axis
   const getMax = (data, field, defaultValue = 1) => {
     if (!data || data.length === 0) return defaultValue;
     const values = data.map(d => d[field]).filter(v => typeof v === 'number' && !isNaN(v) && v > 0);
@@ -458,11 +471,13 @@ async function render() {
     return d3.max(values);
   };
 
+  //calculate max values from filtered data, set upper limit of y-axis
   const maxRainfallDensity = getMax(choroplethData, 'rainfall', 1);
   const maxFloodCountMap = getMax(floodDotData, 'AnnualFloodCount', 1);
   const maxAnnualRainfallLine = getMax(lineValues, 'AverageAnnualRainfall', 1);
   const maxFloodCountLine = getMax(lineValues, 'AnnualFloodCount', 1);
 
+  //normalise state names (trimming whitespace, removing prefix & converting to lower case)
   const dotValues = floodDotData.map(d => ({
     State: d.State.trim().replace('Wilayah Persekutuan ', '').toLowerCase(),
     AnnualFloodCount: d.AnnualFloodCount,
