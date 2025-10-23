@@ -370,6 +370,7 @@
   </div>
 
 <script>
+//transform csv into json string format
 function parseCSV(text) {
   const [header, ...lines] = text.trim().split(/\r?\n/);
   const cols = header.split(',');
